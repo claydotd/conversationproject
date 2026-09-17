@@ -31,8 +31,7 @@ export function AdminLogin({
       <form className="login__card" onSubmit={onSubmit}>
         <h1>Admin</h1>
         <p className="muted">
-          Edit the live website copy, testimonials, and contact details without
-          changing code.
+          This is where you can edit text and images on the live website.
         </p>
         {!passwordConfigured ? (
           <p className="banner">

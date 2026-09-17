@@ -9,7 +9,6 @@ export function TestimonialSection({
 
   return (
     <section className="testimonials page" aria-labelledby="testimonials-heading">
-      <h2 id="testimonials-heading">In their words</h2>
       <div className="testimonial-grid">
         {testimonials.map((item) => (
           <figure
