@@ -127,6 +127,13 @@ export function AdminApp() {
         >
           Contact
         </button>
+        <button
+          type="button"
+          className={panel === "terms" ? "active" : ""}
+          onClick={() => setPanel("terms")}
+        >
+          Terms
+        </button>
         <a href="/" target="_blank" rel="noreferrer">
           View site
         </a>

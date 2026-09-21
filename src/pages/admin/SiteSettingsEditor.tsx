@@ -34,6 +34,7 @@ export function SiteSettingsEditor({
       <h1>Site settings</h1>
       <p className="muted">
         These details appear in the header, footer, and contact page.
+        Newsletter copy is used in the footer signup form.
       </p>
       <div className="field-grid">
         <label>
@@ -79,6 +80,42 @@ export function SiteSettingsEditor({
             onChange={(event) => update("contactAddress", event.target.value)}
           />
         </label>
+      </div>
+      <div className="stack">
+        <h2>Newsletter</h2>
+        <p className="muted">
+          This copy appears with the signup form in the footer. Submissions
+          arrive in Netlify Forms.
+        </p>
+        <div className="field-grid">
+          <label>
+            Heading
+            <input
+              value={site.newsletterHeading}
+              onChange={(event) =>
+                update("newsletterHeading", event.target.value)
+              }
+            />
+          </label>
+          <label>
+            Paragraph
+            <textarea
+              value={site.newsletterParagraph}
+              onChange={(event) =>
+                update("newsletterParagraph", event.target.value)
+              }
+            />
+          </label>
+          <label>
+            Consent checkbox label
+            <input
+              value={site.newsletterConsentLabel}
+              onChange={(event) =>
+                update("newsletterConsentLabel", event.target.value)
+              }
+            />
+          </label>
+        </div>
       </div>
       <div className="stack">
         <div className="card__header">

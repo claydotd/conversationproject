@@ -30,6 +30,7 @@ const PAGE_TITLES: Record<PageSlug, string> = {
   about: "About",
   events: "Events",
   contact: "Contact",
+  terms: "Terms and conditions",
 };
 
 function asString(value: unknown): string {
@@ -247,6 +248,18 @@ export function normalizeSiteContent(
       contactEmail: asString(raw?.site?.contactEmail),
       contactPhone: asString(raw?.site?.contactPhone),
       contactAddress: asString(raw?.site?.contactAddress),
+      newsletterHeading:
+        typeof raw?.site?.newsletterHeading === "string"
+          ? raw.site.newsletterHeading
+          : defaultContent.site.newsletterHeading,
+      newsletterParagraph:
+        typeof raw?.site?.newsletterParagraph === "string"
+          ? raw.site.newsletterParagraph
+          : defaultContent.site.newsletterParagraph,
+      newsletterConsentLabel:
+        typeof raw?.site?.newsletterConsentLabel === "string"
+          ? raw.site.newsletterConsentLabel
+          : defaultContent.site.newsletterConsentLabel,
       social: Array.isArray(raw?.site?.social) ? raw.site.social : [],
     },
     pages,

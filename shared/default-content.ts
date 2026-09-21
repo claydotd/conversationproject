@@ -132,6 +132,46 @@ const contact: PageContent = {
     "Get in touch with The Conversation Project about facilitation, coaching, or a workshop for your team.",
 };
 
+const terms: PageContent = {
+  slug: "terms",
+  title: "Terms and conditions",
+  sections: [
+    {
+      id: "terms-hero",
+      type: "hero",
+      background: "default",
+      eyebrow: "Legal",
+      heading: "Terms and conditions",
+      subheading:
+        "How this site works, and how we use your details if you get in touch or sign up.",
+    },
+    {
+      id: "terms-using-the-site",
+      type: "text",
+      background: "default",
+      heading: "Using this website",
+      body: "This website is provided by The Conversation Project to share our work and make it easy to get in touch. Please use it in good faith. Do not attempt to disrupt the site, misuse forms, or copy content without permission.\n\nEvent listings may link out to Eventbrite or other third-party pages. Those services have their own terms, and we are not responsible for their content or booking processes.",
+    },
+    {
+      id: "terms-newsletter",
+      type: "text",
+      background: "default",
+      heading: "Newsletter and contact details",
+      body: "If you sign up to the newsletter, we use your first name, last name, and email address to send news and updates about upcoming workshops and related work. The consent checkbox is required: we will not add you unless you agree.\n\nYou can unsubscribe at any time using the link in our emails, or by contacting us. If you write to us through the contact form, we will use the details you send only to reply and to follow up on your enquiry.\n\nWe do not sell your personal details.",
+    },
+    {
+      id: "terms-changes",
+      type: "text",
+      background: "default",
+      heading: "Changes",
+      body: "We may update these terms as the site or our work changes. The latest version will always appear on this page. If you have questions, please contact us.",
+    },
+  ],
+  seoTitle: "Terms and conditions — The Conversation Project",
+  seoDescription:
+    "Terms for using The Conversation Project website, including newsletter signup and contact details.",
+};
+
 const events: PageContent = {
   slug: "events",
   title: "Events",
@@ -166,6 +206,11 @@ export const defaultContent: SiteContent = {
     contactEmail: "hello@example.com",
     contactPhone: "",
     contactAddress: "",
+    newsletterHeading: "Stay in the loop",
+    newsletterParagraph:
+      "Sign up with your email address to receive news and updates on upcoming workshops.",
+    newsletterConsentLabel:
+      "I consent to receiving news and updates by email.",
     social: [],
   },
   pages: {
@@ -173,6 +218,7 @@ export const defaultContent: SiteContent = {
     about,
     events,
     contact,
+    terms,
   },
   testimonials: [],
   publishedAt: null,

@@ -6,6 +6,7 @@ import { ContactPage } from "./pages/Contact";
 import { EventsPage } from "./pages/Events";
 import { HomePage } from "./pages/Home";
 import { NotFoundPage } from "./pages/NotFound";
+import { TermsPage } from "./pages/Terms";
 
 export function App() {
   return (
@@ -16,6 +17,7 @@ export function App() {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/events" element={<EventsPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/terms" element={<TermsPage />} />
         <Route path="/home" element={<Navigate to="/" replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

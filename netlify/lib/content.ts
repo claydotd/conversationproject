@@ -21,6 +21,9 @@ interface SettingsRow {
   contact_email: string;
   contact_phone: string;
   contact_address: string;
+  newsletter_heading: string;
+  newsletter_paragraph: string;
+  newsletter_consent_label: string;
   social: SocialLink[] | string;
 }
 
@@ -61,6 +64,13 @@ function mapSettings(row: SettingsRow): SiteSettings {
     contactEmail: row.contact_email,
     contactPhone: row.contact_phone ?? "",
     contactAddress: row.contact_address ?? "",
+    newsletterHeading:
+      row.newsletter_heading || defaultContent.site.newsletterHeading,
+    newsletterParagraph:
+      row.newsletter_paragraph || defaultContent.site.newsletterParagraph,
+    newsletterConsentLabel:
+      row.newsletter_consent_label ||
+      defaultContent.site.newsletterConsentLabel,
     social: parseJson<SocialLink[]>(row.social, []),
   };
 }
@@ -88,7 +98,7 @@ function mapPage(row: PageRow): {
 export async function loadContentFromDatabase(): Promise<SiteContent> {
   const db = getDb();
   const [settingsRows, pageRows, testimonialRows] = await Promise.all([
-    db.sql`SELECT name, tagline, footer_text, contact_email, contact_phone, contact_address, social FROM site_settings WHERE id = ${"default"}`,
+    db.sql`SELECT name, tagline, footer_text, contact_email, contact_phone, contact_address, newsletter_heading, newsletter_paragraph, newsletter_consent_label, social FROM site_settings WHERE id = ${"default"}`,
     db.sql`SELECT slug, title, hero_heading, hero_subheading, sections, seo_title, seo_description FROM pages`,
     db.sql`SELECT id, page_slug, quote, author_name, author_role, image_url, sort_order FROM testimonials ORDER BY page_slug, sort_order, created_at`,
   ]);
@@ -143,8 +153,9 @@ export async function saveContentToDatabase(
     await client.query("BEGIN");
     await client.query(
       `INSERT INTO site_settings (
-        id, name, tagline, footer_text, contact_email, contact_phone, contact_address, social, updated_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8, NOW())
+        id, name, tagline, footer_text, contact_email, contact_phone, contact_address,
+        newsletter_heading, newsletter_paragraph, newsletter_consent_label, social, updated_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11, NOW())
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         tagline = EXCLUDED.tagline,
@@ -152,6 +163,9 @@ export async function saveContentToDatabase(
         contact_email = EXCLUDED.contact_email,
         contact_phone = EXCLUDED.contact_phone,
         contact_address = EXCLUDED.contact_address,
+        newsletter_heading = EXCLUDED.newsletter_heading,
+        newsletter_paragraph = EXCLUDED.newsletter_paragraph,
+        newsletter_consent_label = EXCLUDED.newsletter_consent_label,
         social = EXCLUDED.social,
         updated_at = NOW()`,
       [
@@ -162,6 +176,9 @@ export async function saveContentToDatabase(
         normalized.site.contactEmail,
         normalized.site.contactPhone,
         normalized.site.contactAddress,
+        normalized.site.newsletterHeading,
+        normalized.site.newsletterParagraph,
+        normalized.site.newsletterConsentLabel,
         JSON.stringify(normalized.site.social ?? []),
       ],
     );

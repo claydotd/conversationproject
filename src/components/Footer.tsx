@@ -1,4 +1,6 @@
+import { Link } from "react-router-dom";
 import { useSiteContent } from "../lib/content-context";
+import { NewsletterSignup } from "./NewsletterSignup";
 
 export function Footer() {
   const { content } = useSiteContent();
@@ -7,15 +9,19 @@ export function Footer() {
   return (
     <footer className="site-footer">
       <div className="site-footer__inner">
-        <p>
+        <div className="site-footer__grid">
+          <NewsletterSignup />
+          <div className="site-footer__aside">
+            {content.site.contactEmail ? (
+              <a href={`mailto:${content.site.contactEmail}`}>
+                {content.site.contactEmail}
+              </a>
+            ) : null}
+            <Link to="/terms">Terms and conditions</Link>
+          </div>
+        </div>
+        <p className="site-footer__copy">
           © {year} {content.site.name}. {content.site.footerText}
-        </p>
-        <p>
-          {content.site.contactEmail ? (
-            <a href={`mailto:${content.site.contactEmail}`}>
-              {content.site.contactEmail}
-            </a>
-          ) : null}
         </p>
       </div>
     </footer>

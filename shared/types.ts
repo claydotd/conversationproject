@@ -1,4 +1,4 @@
-export const PAGE_SLUGS = ["home", "about", "events", "contact"] as const;
+export const PAGE_SLUGS = ["home", "about", "events", "contact", "terms"] as const;
 export type PageSlug = (typeof PAGE_SLUGS)[number];
 
 export const SECTION_TYPES = [
@@ -42,6 +42,9 @@ export interface SiteSettings {
   contactEmail: string;
   contactPhone: string;
   contactAddress: string;
+  newsletterHeading: string;
+  newsletterParagraph: string;
+  newsletterConsentLabel: string;
   social: SocialLink[];
 }
 
