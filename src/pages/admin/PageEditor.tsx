@@ -2,13 +2,16 @@ import type { Dispatch, SetStateAction } from "react";
 import {
   createGalleryImage,
   createPageSection,
+  SECTION_BACKGROUND_LABELS,
   SECTION_TYPE_LABELS,
 } from "@shared/page-sections";
 import {
+  SECTION_BACKGROUNDS,
   SECTION_TYPES,
   type GalleryImage,
   type PageSection,
   type PageSlug,
+  type SectionBackground,
   type SectionType,
   type SiteContent,
 } from "@shared/types";
@@ -79,8 +82,7 @@ export function PageEditor({
     <div className="admin-panel">
       <h1>{page.title}</h1>
       <p className="muted">
-        Build this page from sections in any order. A hero is optional. Saving
-        publishes the live site.
+        Here you can build each page's content using different types ofsections Saving publishes the live site. <em>Please note: It takes a few seconds after saving for the changes to appear.</em>
       </p>
       <div className="field-grid">
         <label>
@@ -162,6 +164,15 @@ export function PageEditor({
                 </button>
               </div>
             </div>
+            <BackgroundPicker
+              value={section.background}
+              onChange={(background) =>
+                updateSection(section.id, (current) => ({
+                  ...current,
+                  background,
+                }))
+              }
+            />
             <SectionFields
               section={section}
               onChange={(updater) => updateSection(section.id, updater)}
@@ -171,6 +182,47 @@ export function PageEditor({
         ))}
       </div>
     </div>
+  );
+}
+
+function BackgroundPicker({
+  value,
+  onChange,
+}: {
+  value: SectionBackground;
+  onChange: (background: SectionBackground) => void;
+}) {
+  return (
+    <fieldset className="bg-picker">
+      <legend>
+        Background colour
+        <span className="bg-picker__current">
+          {SECTION_BACKGROUND_LABELS[value]}
+        </span>
+      </legend>
+      <div className="bg-swatches" role="radiogroup" aria-label="Background colour">
+        {SECTION_BACKGROUNDS.map((background) => {
+          const selected = background === value;
+          return (
+            <button
+              key={background}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              aria-label={SECTION_BACKGROUND_LABELS[background]}
+              title={SECTION_BACKGROUND_LABELS[background]}
+              className={`bg-swatch${background === "default" ? " bg-swatch--default" : ""}${selected ? " is-selected" : ""}`}
+              style={
+                background === "default"
+                  ? undefined
+                  : { backgroundColor: `var(--${background})` }
+              }
+              onClick={() => onChange(background)}
+            />
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }
 

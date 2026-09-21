@@ -199,6 +199,61 @@ p:last-child {
   padding: 1.2rem 0 2.6rem;
 }
 
+.section-bg--dark-background {
+  background: var(--dark-background);
+}
+
+.section-bg--mid-background {
+  background: var(--mid-background);
+}
+
+.section-bg--light-background {
+  background: var(--light-background);
+}
+
+.section-bg--paper {
+  background: var(--paper);
+}
+
+.section-bg--paper-deep {
+  background: var(--paper-deep);
+}
+
+.section-bg--ink {
+  background: var(--ink);
+}
+
+.section-bg--ink-soft {
+  background: var(--ink-soft);
+}
+
+.section-bg--accent {
+  background: var(--accent);
+}
+
+.section-bg--accent-deep {
+  background: var(--accent-deep);
+}
+
+.section-bg--sage {
+  background: var(--sage);
+}
+
+.section-bg--inverse {
+  color: var(--paper);
+}
+
+.section-bg--inverse .hero__eyebrow {
+  color: var(--mid-background);
+}
+
+.section-bg--inverse .hero__sub,
+.section-bg--inverse .prose,
+.section-bg--inverse .image-block figcaption,
+.section-bg--inverse .gallery figcaption {
+  color: var(--paper-deep);
+}
+
 .section h2 {
   font-size: clamp(1.6rem, 3vw, 2.2rem);
 }
@@ -267,6 +322,7 @@ p:last-child {
 
 .testimonial {
   background: white;
+  color: var(--ink);
   border: 1px solid var(--rule);
   box-shadow: var(--shadow);
   padding: 1.4rem;
@@ -321,6 +377,117 @@ p:last-child {
   display: grid;
   gap: 0.4rem;
   color: var(--ink-soft);
+}
+
+.events-section {
+  padding-bottom: 4rem;
+}
+
+.event-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 1.5rem;
+}
+
+.event-toggle button {
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--ink);
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.event-toggle button.is-active {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.event-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16.5rem, 1fr));
+  gap: 1rem;
+}
+
+.event-card {
+  display: grid;
+  align-content: start;
+  text-decoration: none;
+  background: white;
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  color: inherit;
+  min-height: 100%;
+}
+
+.event-card:hover,
+.event-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.event-card img,
+.event-card__placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: var(--mid-background);
+}
+
+.event-card__placeholder {
+  background: linear-gradient(
+    160deg,
+    var(--mid-background),
+    var(--dark-background)
+  );
+}
+
+.event-card__body {
+  padding: 1.05rem 1.15rem 1.25rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.event-card h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.15rem;
+}
+
+.event-card__date {
+  margin: 0;
+  color: var(--accent-deep);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.event-card__place,
+.event-card__summary,
+.event-card__cta {
+  margin: 0;
+}
+
+.event-card__place,
+.event-card__summary {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+.event-card__summary {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.event-card__cta {
+  margin-top: 0.45rem;
+  font-size: 0.88rem;
+  color: var(--accent-deep);
 }
 
 .form {
@@ -516,6 +683,71 @@ p:last-child {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-soft);
+}
+
+.bg-picker {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+  min-inline-size: 0;
+}
+
+.bg-picker legend {
+  padding: 0;
+  font-size: 0.92rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: baseline;
+}
+
+.bg-picker__current {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+.bg-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.bg-swatch {
+  appearance: none;
+  display: block;
+  flex: 0 0 auto;
+  width: 1.85rem;
+  height: 1.85rem;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  cursor: pointer;
+  background: var(--light-background);
+}
+
+.bg-swatch--default {
+  background:
+    linear-gradient(
+      to bottom right,
+      transparent calc(50% - 1px),
+      var(--ink-soft) calc(50% - 1px),
+      var(--ink-soft) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    ),
+    var(--paper);
+}
+
+.bg-swatch.is-selected {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.bg-swatch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .gallery-editor-item {

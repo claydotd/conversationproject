@@ -5,6 +5,7 @@ import { useSiteContent } from "../lib/content-context";
 const links = [
   { to: "/", label: "Home" },
   { to: "/about", label: "About" },
+  { to: "/events", label: "Events" },
   { to: "/contact", label: "Contact" },
 ];
 

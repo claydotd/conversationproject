@@ -1,4 +1,4 @@
-export const PAGE_SLUGS = ["home", "about", "contact"] as const;
+export const PAGE_SLUGS = ["home", "about", "events", "contact"] as const;
 export type PageSlug = (typeof PAGE_SLUGS)[number];
 
 export const SECTION_TYPES = [
@@ -9,6 +9,26 @@ export const SECTION_TYPES = [
   "testimonial",
 ] as const;
 export type SectionType = (typeof SECTION_TYPES)[number];
+
+export const SECTION_BACKGROUNDS = [
+  "default",
+  "dark-background",
+  "mid-background",
+  "light-background",
+  "paper",
+  "paper-deep",
+  "ink",
+  "ink-soft",
+  "accent",
+  "accent-deep",
+  "sage",
+] as const;
+export type SectionBackground = (typeof SECTION_BACKGROUNDS)[number];
+
+interface PageSectionBase {
+  id: string;
+  background: SectionBackground;
+}
 
 export interface SocialLink {
   label: string;
@@ -25,23 +45,20 @@ export interface SiteSettings {
   social: SocialLink[];
 }
 
-export interface HeroSection {
-  id: string;
+export interface HeroSection extends PageSectionBase {
   type: "hero";
   eyebrow: string;
   heading: string;
   subheading: string;
 }
 
-export interface TextSection {
-  id: string;
+export interface TextSection extends PageSectionBase {
   type: "text";
   heading: string;
   body: string;
 }
 
-export interface ImageSection {
-  id: string;
+export interface ImageSection extends PageSectionBase {
   type: "image";
   heading: string;
   imageUrl: string;
@@ -56,15 +73,13 @@ export interface GalleryImage {
   caption: string;
 }
 
-export interface GallerySection {
-  id: string;
+export interface GallerySection extends PageSectionBase {
   type: "gallery";
   heading: string;
   images: GalleryImage[];
 }
 
-export interface TestimonialSection {
-  id: string;
+export interface TestimonialSection extends PageSectionBase {
   type: "testimonial";
   quote: string;
   authorName: string;

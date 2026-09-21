@@ -25,11 +25,15 @@
   [headers.values]
     Cache-Control = "public, max-age=60, stale-while-revalidate=86400"
 
+[[headers]]
+  for = "/api/events"
+  [headers.values]
+    Cache-Control = "public, max-age=60, stale-while-revalidate=86400"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-# Future integrations (not wired yet):
+# Future integration (not wired yet):
 # - SumUp shop at /shop
-# - Eventbrite events at /events

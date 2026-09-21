@@ -1,4 +1,5 @@
 import { defaultContent } from "@shared/default-content";
+import type { EventsListing } from "@shared/events";
 import { normalizeSiteContent } from "@shared/normalize-content";
 import type { SiteContent } from "@shared/types";
 
@@ -82,6 +83,17 @@ export async function uploadAdminImage(file: File): Promise<string> {
   }
   const payload = (await response.json()) as { url: string };
   return payload.url;
+}
+
+export async function fetchEvents(): Promise<EventsListing> {
+  const response = await fetch("/api/events");
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as
+      | { error?: string }
+      | null;
+    throw new Error(payload?.error ?? "Unable to load events.");
+  }
+  return (await response.json()) as EventsListing;
 }
 
 export function encodeForm(data: Record<string, string>): string {

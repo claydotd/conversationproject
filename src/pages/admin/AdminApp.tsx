@@ -115,6 +115,13 @@ export function AdminApp() {
         </button>
         <button
           type="button"
+          className={panel === "events" ? "active" : ""}
+          onClick={() => setPanel("events")}
+        >
+          Events
+        </button>
+        <button
+          type="button"
           className={panel === "contact" ? "active" : ""}
           onClick={() => setPanel("contact")}
         >

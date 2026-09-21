@@ -1,6 +1,6 @@
 # The Conversation Project
 
-A Vite + React + TypeScript site prepared for Netlify. The public pages are **Home**, **About**, and **Contact**. The site owner can edit copy, testimonials, and contact details from `/admin` without touching code.
+A Vite + React + TypeScript site prepared for Netlify. The public pages are **Home**, **About**, **Events**, and **Contact**. The site owner can edit copy, testimonials, and contact details from `/admin` without touching code.
 
 ## How content is stored
 
@@ -36,9 +36,11 @@ The `@netlify/vite-plugin` emulates Functions, Blobs, and other Netlify primitiv
 4. In **Site configuration → Environment variables**, set:
    - `ADMIN_PASSWORD`
    - `ADMIN_SESSION_SECRET` (long random string)
+   - `EVENTBRITE_API_KEY` (private token from Eventbrite → Account Settings → Developer Links → API Keys)
+   - `EVENTBRITE_ORGANIZER_ID` (defaults to `114391829571` if omitted)
 5. Deploy, then visit `https://your-site.netlify.app/admin`, sign in, and click **Save and publish** once so the public snapshot exists.
 
-Starter copy is already in the first migration, so the three pages have real placeholder text and testimonials ready to replace.
+Starter copy is already in the first migration, so the pages have real placeholder text and testimonials ready to replace.
 
 ## Editing the site
 
@@ -50,11 +52,12 @@ From `/admin` the owner can change:
 
 **Save and publish** writes the database once, then refreshes the Blob snapshot the public site reads.
 
-## Later: shop and events
+The **Events** page intro is editable in admin. The listing itself is loaded from Eventbrite when `/events` opens: `/api/events` caches the response in Netlify Blobs for a few minutes so visitors do not hit Eventbrite (or the database) on every view. Upcoming events are shown first; there is a Past toggle. If nothing is scheduled, the page says **No upcoming events**. Each card links out to the Eventbrite event page.
 
-The project is shaped so these can be added without re-platforming:
+## Later: shop
+
+The project is shaped so a shop can be added without re-platforming:
 
 - **SumUp shop** — product table is already in the first migration (`products`, with `digital` and `physical` kinds). Types live in `shared/shop.ts`. Env vars to add later: `SUMUP_API_KEY`, `SUMUP_MERCHANT_CODE`, `SUMUP_PAY_TO_EMAIL`.
-- **Eventbrite events** — `events_cache` is ready so listings can be stored and served from cache instead of calling Eventbrite (or the database) on every visit. Types live in `shared/events.ts`. Env vars to add later: `EVENTBRITE_API_KEY`, `EVENTBRITE_ORGANIZER_ID`.
 
-Suggested routes when you add them: `/shop` and `/events`.
+Suggested route when you add it: `/shop`.

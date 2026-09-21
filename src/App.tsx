@@ -3,6 +3,7 @@ import { Layout } from "./components/Layout";
 import { AboutPage } from "./pages/About";
 import { AdminApp } from "./pages/admin/AdminApp";
 import { ContactPage } from "./pages/Contact";
+import { EventsPage } from "./pages/Events";
 import { HomePage } from "./pages/Home";
 import { NotFoundPage } from "./pages/NotFound";
 
@@ -13,6 +14,7 @@ export function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/events" element={<EventsPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/home" element={<Navigate to="/" replace />} />
         <Route path="*" element={<NotFoundPage />} />

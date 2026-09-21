@@ -1,4 +1,6 @@
-import type { PageSection } from "@shared/types";
+import type { ReactNode } from "react";
+import type { PageSection, SectionBackground } from "@shared/types";
+import { sectionSurfaceClass } from "@shared/page-sections";
 import { PageHero } from "./PageHero";
 import { TestimonialSection } from "./TestimonialSection";
 
@@ -8,21 +10,43 @@ function paragraphs(text: string, id: string) {
   ));
 }
 
+function cx(...parts: Array<string | false | undefined>) {
+  return parts.filter(Boolean).join(" ");
+}
+
+function SectionFrame({
+  background,
+  className,
+  children,
+}: {
+  background: SectionBackground;
+  className: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className={cx(className, sectionSurfaceClass(background))}>
+      <div className="page">{children}</div>
+    </section>
+  );
+}
+
 function TextBlock({
   heading,
   body,
   id,
+  background,
 }: {
   heading: string;
   body: string;
   id: string;
+  background: SectionBackground;
 }) {
   if (!heading && !body) return null;
   return (
-    <section className="section page">
+    <SectionFrame className="section" background={background}>
       {heading ? <h2>{heading}</h2> : null}
       {body ? <div className="prose">{paragraphs(body, id)}</div> : null}
-    </section>
+    </SectionFrame>
   );
 }
 
@@ -31,35 +55,39 @@ function ImageBlock({
   imageUrl,
   alt,
   caption,
+  background,
 }: {
   heading: string;
   imageUrl: string;
   alt: string;
   caption: string;
+  background: SectionBackground;
 }) {
   if (!imageUrl) return null;
   return (
-    <section className="image-block page">
+    <SectionFrame className="image-block" background={background}>
       {heading ? <h2>{heading}</h2> : null}
       <figure>
         <img src={imageUrl} alt={alt} />
         {caption ? <figcaption>{caption}</figcaption> : null}
       </figure>
-    </section>
+    </SectionFrame>
   );
 }
 
 function GalleryBlock({
   heading,
   images,
+  background,
 }: {
   heading: string;
   images: { id: string; imageUrl: string; alt: string; caption: string }[];
+  background: SectionBackground;
 }) {
   const visible = images.filter((image) => image.imageUrl);
   if (visible.length === 0) return null;
   return (
-    <section className="gallery-section page">
+    <SectionFrame className="gallery-section" background={background}>
       {heading ? <h2>{heading}</h2> : null}
       <div className="gallery">
         {visible.map((image) => (
@@ -69,7 +97,7 @@ function GalleryBlock({
           </figure>
         ))}
       </div>
-    </section>
+    </SectionFrame>
   );
 }
 
@@ -82,6 +110,7 @@ function SectionView({ section }: { section: PageSection }) {
           eyebrow={section.eyebrow}
           heading={section.heading}
           subheading={section.subheading}
+          className={sectionSurfaceClass(section.background)}
         />
       );
     case "text":
@@ -90,6 +119,7 @@ function SectionView({ section }: { section: PageSection }) {
           id={section.id}
           heading={section.heading}
           body={section.body}
+          background={section.background}
         />
       );
     case "image":
@@ -99,10 +129,17 @@ function SectionView({ section }: { section: PageSection }) {
           imageUrl={section.imageUrl}
           alt={section.alt}
           caption={section.caption}
+          background={section.background}
         />
       );
     case "gallery":
-      return <GalleryBlock heading={section.heading} images={section.images} />;
+      return (
+        <GalleryBlock
+          heading={section.heading}
+          images={section.images}
+          background={section.background}
+        />
+      );
     case "testimonial":
       return <TestimonialSection item={section} />;
   }

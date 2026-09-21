@@ -1,10 +1,12 @@
-import { createSectionId } from "./page-sections";
+import { createSectionId, isSectionBackground } from "./page-sections";
+import { defaultContent } from "./default-content";
 import {
   PAGE_SLUGS,
   type GalleryImage,
   type PageContent,
   type PageSection,
   type PageSlug,
+  type SectionBackground,
   type SiteContent,
   type SiteSettings,
   type Testimonial,
@@ -26,6 +28,7 @@ interface LegacySiteContent {
 const PAGE_TITLES: Record<PageSlug, string> = {
   home: "Home",
   about: "About",
+  events: "Events",
   contact: "Contact",
 };
 
@@ -37,6 +40,10 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : null;
+}
+
+function normalizeBackground(value: unknown): SectionBackground {
+  return isSectionBackground(value) ? value : "default";
 }
 
 function normalizeGalleryImage(value: unknown): GalleryImage | null {
@@ -57,11 +64,13 @@ function normalizeSection(value: unknown): PageSection | null {
   if (!item) return null;
   const id = asString(item.id) || createSectionId();
   const type = asString(item.type);
+  const background = normalizeBackground(item.background);
 
   if (type === "hero") {
     return {
       id,
       type: "hero",
+      background,
       eyebrow: asString(item.eyebrow),
       heading: asString(item.heading),
       subheading: asString(item.subheading),
@@ -72,6 +81,7 @@ function normalizeSection(value: unknown): PageSection | null {
     return {
       id,
       type: "text",
+      background,
       heading: asString(item.heading),
       body: asString(item.body),
     };
@@ -81,6 +91,7 @@ function normalizeSection(value: unknown): PageSection | null {
     return {
       id,
       type: "image",
+      background,
       heading: asString(item.heading),
       imageUrl: asString(item.imageUrl),
       alt: asString(item.alt),
@@ -97,6 +108,7 @@ function normalizeSection(value: unknown): PageSection | null {
     return {
       id,
       type: "gallery",
+      background,
       heading: asString(item.heading),
       images,
     };
@@ -106,6 +118,7 @@ function normalizeSection(value: unknown): PageSection | null {
     return {
       id,
       type: "testimonial",
+      background,
       quote: asString(item.quote),
       authorName: asString(item.authorName),
       authorRole: asString(item.authorRole),
@@ -177,6 +190,7 @@ function normalizePage(
     sections.unshift({
       id: `${slug}-hero`,
       type: "hero",
+      background: "default",
       eyebrow: title,
       heading,
       subheading,
@@ -191,6 +205,7 @@ function normalizePage(
       sections.push({
         id: item.id,
         type: "testimonial",
+        background: "default",
         quote: item.quote,
         authorName: item.authorName,
         authorRole: item.authorRole,
@@ -217,7 +232,11 @@ export function normalizeSiteContent(
     : [];
 
   for (const slug of PAGE_SLUGS) {
-    pages[slug] = normalizePage(slug, raw?.pages?.[slug], testimonials);
+    pages[slug] = normalizePage(
+      slug,
+      raw?.pages?.[slug] ?? defaultContent.pages[slug],
+      testimonials,
+    );
   }
 
   return {
