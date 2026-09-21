@@ -1,4 +1,5 @@
 import { defaultContent } from "@shared/default-content";
+import { normalizeSiteContent } from "@shared/normalize-content";
 import type { SiteContent } from "@shared/types";
 
 export async function fetchPublishedContent(): Promise<SiteContent> {
@@ -6,7 +7,7 @@ export async function fetchPublishedContent(): Promise<SiteContent> {
   if (!response.ok) {
     return defaultContent;
   }
-  return (await response.json()) as SiteContent;
+  return normalizeSiteContent(await response.json());
 }
 
 export async function fetchAdminSession(): Promise<{
@@ -46,7 +47,7 @@ export async function fetchAdminContent(): Promise<SiteContent> {
       | null;
     throw new Error(payload?.error ?? "Unable to load editable content.");
   }
-  return response.json();
+  return normalizeSiteContent(await response.json());
 }
 
 export async function saveAdminContent(
@@ -63,7 +64,7 @@ export async function saveAdminContent(
       | null;
     throw new Error(payload?.error ?? "Unable to save content.");
   }
-  return response.json();
+  return normalizeSiteContent(await response.json());
 }
 
 export async function uploadAdminImage(file: File): Promise<string> {

@@ -1,12 +1,14 @@
 import { defaultContent } from "../../shared/default-content";
+import {
+  heroFieldsFromPage,
+  normalizeSiteContent,
+  testimonialsFromPages,
+} from "../../shared/normalize-content";
 import type {
-  ContentSection,
-  PageContent,
   PageSlug,
   SiteContent,
   SiteSettings,
   SocialLink,
-  Testimonial,
 } from "../../shared/types";
 import { PAGE_SLUGS } from "../../shared/types";
 import { getDb } from "./db";
@@ -27,7 +29,7 @@ interface PageRow {
   title: string;
   hero_heading: string;
   hero_subheading: string;
-  sections: ContentSection[] | string;
+  sections: unknown;
   seo_title: string;
   seo_description: string;
 }
@@ -63,27 +65,23 @@ function mapSettings(row: SettingsRow): SiteSettings {
   };
 }
 
-function mapPage(row: PageRow): PageContent {
+function mapPage(row: PageRow): {
+  slug: PageSlug;
+  title: string;
+  heroHeading: string;
+  heroSubheading: string;
+  sections: unknown;
+  seoTitle: string;
+  seoDescription: string;
+} {
   return {
     slug: row.slug,
     title: row.title,
     heroHeading: row.hero_heading,
     heroSubheading: row.hero_subheading,
-    sections: parseJson<ContentSection[]>(row.sections, []),
+    sections: parseJson(row.sections, []),
     seoTitle: row.seo_title,
     seoDescription: row.seo_description,
-  };
-}
-
-function mapTestimonial(row: TestimonialRow): Testimonial {
-  return {
-    id: row.id,
-    pageSlug: row.page_slug,
-    quote: row.quote,
-    authorName: row.author_name,
-    authorRole: row.author_role ?? "",
-    imageUrl: row.image_url ?? "",
-    sortOrder: Number(row.sort_order) || 0,
   };
 }
 
@@ -100,24 +98,44 @@ export async function loadContentFromDatabase(): Promise<SiteContent> {
     return structuredClone(defaultContent);
   }
 
-  const pages = { ...defaultContent.pages };
+  const pages: Record<
+    PageSlug,
+    {
+      slug: PageSlug;
+      title: string;
+      heroHeading?: string;
+      heroSubheading?: string;
+      sections?: unknown;
+      seoTitle: string;
+      seoDescription: string;
+    }
+  > = { ...defaultContent.pages };
   for (const row of pageRows as PageRow[]) {
     if (PAGE_SLUGS.includes(row.slug)) {
       pages[row.slug] = mapPage(row);
     }
   }
 
-  return {
+  return normalizeSiteContent({
     site: mapSettings(settings),
     pages,
-    testimonials: (testimonialRows as TestimonialRow[]).map(mapTestimonial),
+    testimonials: (testimonialRows as TestimonialRow[]).map((row) => ({
+      id: row.id,
+      pageSlug: row.page_slug,
+      quote: row.quote,
+      authorName: row.author_name,
+      authorRole: row.author_role ?? "",
+      imageUrl: row.image_url ?? "",
+      sortOrder: Number(row.sort_order) || 0,
+    })),
     publishedAt: null,
-  };
+  });
 }
 
 export async function saveContentToDatabase(
   content: SiteContent,
 ): Promise<SiteContent> {
+  const normalized = normalizeSiteContent(content);
   const db = getDb();
   const client = await db.pool.connect();
 
@@ -138,18 +156,19 @@ export async function saveContentToDatabase(
         updated_at = NOW()`,
       [
         "default",
-        content.site.name,
-        content.site.tagline,
-        content.site.footerText,
-        content.site.contactEmail,
-        content.site.contactPhone,
-        content.site.contactAddress,
-        JSON.stringify(content.site.social ?? []),
+        normalized.site.name,
+        normalized.site.tagline,
+        normalized.site.footerText,
+        normalized.site.contactEmail,
+        normalized.site.contactPhone,
+        normalized.site.contactAddress,
+        JSON.stringify(normalized.site.social ?? []),
       ],
     );
 
     for (const slug of PAGE_SLUGS) {
-      const page = content.pages[slug];
+      const page = normalized.pages[slug];
+      const hero = heroFieldsFromPage(page);
       await client.query(
         `INSERT INTO pages (
           slug, title, hero_heading, hero_subheading, sections, seo_title, seo_description, updated_at
@@ -165,8 +184,8 @@ export async function saveContentToDatabase(
         [
           page.slug,
           page.title,
-          page.heroHeading,
-          page.heroSubheading,
+          hero.heading,
+          hero.subheading,
           JSON.stringify(page.sections ?? []),
           page.seoTitle,
           page.seoDescription,
@@ -174,8 +193,9 @@ export async function saveContentToDatabase(
       );
     }
 
+    const testimonials = testimonialsFromPages(normalized.pages);
     await client.query("DELETE FROM testimonials");
-    for (const [index, item] of content.testimonials.entries()) {
+    for (const [index, item] of testimonials.entries()) {
       await client.query(
         `INSERT INTO testimonials (
           id, page_slug, quote, author_name, author_role, image_url, sort_order

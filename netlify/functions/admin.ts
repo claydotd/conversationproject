@@ -70,8 +70,7 @@ function isSiteContent(value: unknown): value is SiteContent {
   return (
     Boolean(candidate.site) &&
     Boolean(candidate.pages) &&
-    PAGE_SLUGS.every((slug) => candidate.pages?.[slug]) &&
-    Array.isArray(candidate.testimonials)
+    PAGE_SLUGS.every((slug) => candidate.pages?.[slug])
   );
 }
 

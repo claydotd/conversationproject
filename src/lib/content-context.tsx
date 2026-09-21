@@ -7,13 +7,13 @@ import {
   type ReactNode,
 } from "react";
 import { defaultContent } from "@shared/default-content";
-import type { PageSlug, SiteContent, Testimonial } from "@shared/types";
+import { normalizeSiteContent } from "@shared/normalize-content";
+import type { SiteContent } from "@shared/types";
 import { fetchPublishedContent } from "./api";
 
 interface ContentContextValue {
   content: SiteContent;
   loading: boolean;
-  testimonialsFor: (slug: PageSlug) => Testimonial[];
 }
 
 const ContentContext = createContext<ContentContextValue | null>(null);
@@ -26,7 +26,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     fetchPublishedContent()
       .then((next) => {
-        if (!cancelled) setContent(next);
+        if (!cancelled) setContent(normalizeSiteContent(next));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -40,10 +40,6 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     () => ({
       content,
       loading,
-      testimonialsFor: (slug: PageSlug) =>
-        content.testimonials
-          .filter((item) => item.pageSlug === slug)
-          .sort((a, b) => a.sortOrder - b.sortOrder),
     }),
     [content, loading],
   );

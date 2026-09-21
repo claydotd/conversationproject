@@ -1,14 +1,10 @@
 import { FormEvent, useState } from "react";
-import { PageHero } from "../components/PageHero";
-import { PageSections } from "../components/PageSections";
-import { Seo } from "../components/Seo";
-import { TestimonialSection } from "../components/TestimonialSection";
+import { CmsPage } from "../components/CmsPage";
 import { encodeForm } from "../lib/api";
 import { useSiteContent } from "../lib/content-context";
 
 export function ContactPage() {
-  const { content, testimonialsFor } = useSiteContent();
-  const page = content.pages.contact;
+  const { content } = useSiteContent();
   const [status, setStatus] = useState("");
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -40,14 +36,7 @@ export function ContactPage() {
   }
 
   return (
-    <>
-      <Seo title={page.seoTitle} description={page.seoDescription} />
-      <PageHero
-        eyebrow="Contact"
-        heading={page.heroHeading}
-        subheading={page.heroSubheading}
-      />
-      <PageSections sections={page.sections} />
+    <CmsPage slug="contact">
       <section className="section page">
         <div className="contact-layout">
           <div className="form-card">
@@ -107,7 +96,6 @@ export function ContactPage() {
           </aside>
         </div>
       </section>
-      <TestimonialSection testimonials={testimonialsFor("contact")} />
-    </>
+    </CmsPage>
   );
 }

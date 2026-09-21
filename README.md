@@ -45,8 +45,8 @@ Starter copy is already in the first migration, so the three pages have real pla
 From `/admin` the owner can change:
 
 - Site name, tagline, footer, email, phone, address, social links
-- Each page’s heading, body sections, and SEO text
-- Testimonials per page, including optional photos
+- Each page’s SEO text and an ordered list of sections
+- Section types: optional hero, text, image block, image gallery, and testimonial
 
 **Save and publish** writes the database once, then refreshes the Blob snapshot the public site reads.
 

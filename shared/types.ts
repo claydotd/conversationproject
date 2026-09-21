@@ -1,6 +1,15 @@
 export const PAGE_SLUGS = ["home", "about", "contact"] as const;
 export type PageSlug = (typeof PAGE_SLUGS)[number];
 
+export const SECTION_TYPES = [
+  "hero",
+  "text",
+  "image",
+  "gallery",
+  "testimonial",
+] as const;
+export type SectionType = (typeof SECTION_TYPES)[number];
+
 export interface SocialLink {
   label: string;
   url: string;
@@ -16,18 +25,64 @@ export interface SiteSettings {
   social: SocialLink[];
 }
 
-export interface ContentSection {
+export interface HeroSection {
   id: string;
+  type: "hero";
+  eyebrow: string;
+  heading: string;
+  subheading: string;
+}
+
+export interface TextSection {
+  id: string;
+  type: "text";
   heading: string;
   body: string;
 }
 
+export interface ImageSection {
+  id: string;
+  type: "image";
+  heading: string;
+  imageUrl: string;
+  alt: string;
+  caption: string;
+}
+
+export interface GalleryImage {
+  id: string;
+  imageUrl: string;
+  alt: string;
+  caption: string;
+}
+
+export interface GallerySection {
+  id: string;
+  type: "gallery";
+  heading: string;
+  images: GalleryImage[];
+}
+
+export interface TestimonialSection {
+  id: string;
+  type: "testimonial";
+  quote: string;
+  authorName: string;
+  authorRole: string;
+  imageUrl: string;
+}
+
+export type PageSection =
+  | HeroSection
+  | TextSection
+  | ImageSection
+  | GallerySection
+  | TestimonialSection;
+
 export interface PageContent {
   slug: PageSlug;
   title: string;
-  heroHeading: string;
-  heroSubheading: string;
-  sections: ContentSection[];
+  sections: PageSection[];
   seoTitle: string;
   seoDescription: string;
 }

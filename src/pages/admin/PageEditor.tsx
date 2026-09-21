@@ -1,5 +1,17 @@
 import type { Dispatch, SetStateAction } from "react";
-import type { PageSlug, SiteContent, Testimonial } from "@shared/types";
+import {
+  createGalleryImage,
+  createPageSection,
+  SECTION_TYPE_LABELS,
+} from "@shared/page-sections";
+import {
+  SECTION_TYPES,
+  type GalleryImage,
+  type PageSection,
+  type PageSlug,
+  type SectionType,
+  type SiteContent,
+} from "@shared/types";
 import { uploadAdminImage } from "../../lib/api";
 
 export function PageEditor({
@@ -12,9 +24,6 @@ export function PageEditor({
   setContent: Dispatch<SetStateAction<SiteContent>>;
 }) {
   const page = content.pages[slug];
-  const testimonials = content.testimonials
-    .filter((item) => item.pageSlug === slug)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
 
   function updatePage(patch: Partial<typeof page>) {
     setContent((current) => ({
@@ -26,45 +35,52 @@ export function PageEditor({
     }));
   }
 
+  function setSections(sections: PageSection[]) {
+    updatePage({ sections });
+  }
+
   function updateSection(
     id: string,
-    patch: Partial<(typeof page.sections)[number]>,
+    updater: (section: PageSection) => PageSection,
   ) {
-    updatePage({
-      sections: page.sections.map((section) =>
-        section.id === id ? { ...section, ...patch } : section,
+    setSections(
+      page.sections.map((section) =>
+        section.id === id ? updater(section) : section,
       ),
-    });
-  }
-
-  function setTestimonials(next: Testimonial[]) {
-    setContent((current) => ({
-      ...current,
-      testimonials: [
-        ...current.testimonials.filter((item) => item.pageSlug !== slug),
-        ...next.map((item, index) => ({ ...item, sortOrder: index })),
-      ],
-    }));
-  }
-
-  function updateTestimonial(id: string, patch: Partial<Testimonial>) {
-    setTestimonials(
-      testimonials.map((item) => (item.id === id ? { ...item, ...patch } : item)),
     );
   }
 
-  async function onImage(id: string, file: File | undefined) {
+  function addSection(type: SectionType) {
+    setSections([...page.sections, createPageSection(type)]);
+  }
+
+  function moveSection(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= page.sections.length) return;
+    const next = [...page.sections];
+    [next[index], next[target]] = [next[target], next[index]];
+    setSections(next);
+  }
+
+  function removeSection(id: string) {
+    setSections(page.sections.filter((section) => section.id !== id));
+  }
+
+  async function uploadTo(
+    file: File | undefined,
+    apply: (url: string) => void,
+  ) {
     if (!file) return;
     const url = await uploadAdminImage(file);
-    updateTestimonial(id, { imageUrl: url });
+    apply(url);
   }
 
   return (
     <div className="admin-panel">
       <h1>{page.title}</h1>
       <p className="muted">
-        Edit the public copy for this page. Saving publishes it to the live
-        site.
+        Build this page from sections in any order. A hero is optional. Saving
+        publishes the live site.
       </p>
       <div className="field-grid">
         <label>
@@ -72,24 +88,6 @@ export function PageEditor({
           <input
             value={page.title}
             onChange={(event) => updatePage({ title: event.target.value })}
-          />
-        </label>
-        <label>
-          Hero heading
-          <input
-            value={page.heroHeading}
-            onChange={(event) =>
-              updatePage({ heroHeading: event.target.value })
-            }
-          />
-        </label>
-        <label>
-          Hero subheading
-          <textarea
-            value={page.heroSubheading}
-            onChange={(event) =>
-              updatePage({ heroSubheading: event.target.value })
-            }
           />
         </label>
         <label>
@@ -113,181 +111,444 @@ export function PageEditor({
       <div className="stack">
         <div className="card__header">
           <h2>Page sections</h2>
-          <button
-            className="ghost"
-            type="button"
-            onClick={() =>
-              updatePage({
-                sections: [
-                  ...page.sections,
-                  {
-                    id: crypto.randomUUID(),
-                    heading: "New section",
-                    body: "",
-                  },
-                ],
-              })
-            }
-          >
-            Add section
-          </button>
         </div>
-        {page.sections.map((section) => (
-          <div className="card" key={section.id}>
-            <label>
-              Heading
-              <input
-                value={section.heading}
-                onChange={(event) =>
-                  updateSection(section.id, { heading: event.target.value })
-                }
-              />
-            </label>
-            <label>
-              Body
-              <textarea
-                value={section.body}
-                onChange={(event) =>
-                  updateSection(section.id, { body: event.target.value })
-                }
-              />
-            </label>
+        <div className="add-section">
+          {SECTION_TYPES.map((type) => (
             <button
-              className="danger"
+              className="ghost"
               type="button"
-              onClick={() =>
-                updatePage({
-                  sections: page.sections.filter(
-                    (item) => item.id !== section.id,
-                  ),
-                })
-              }
+              key={type}
+              onClick={() => addSection(type)}
             >
-              Remove section
+              Add {SECTION_TYPE_LABELS[type].toLowerCase()}
             </button>
-          </div>
+          ))}
+        </div>
+        {page.sections.length === 0 ? (
+          <p className="muted">
+            No sections yet. Add text, an image, a gallery, a testimonial, or a
+            hero.
+          </p>
+        ) : null}
+        {page.sections.map((section, index) => (
+          <article className="card" key={section.id}>
+            <div className="section-card__meta">
+              <p className="section-type-label">
+                {SECTION_TYPE_LABELS[section.type]}
+              </p>
+              <div className="inline-actions">
+                <button
+                  className="ghost"
+                  type="button"
+                  disabled={index === 0}
+                  onClick={() => moveSection(index, -1)}
+                >
+                  Move up
+                </button>
+                <button
+                  className="ghost"
+                  type="button"
+                  disabled={index === page.sections.length - 1}
+                  onClick={() => moveSection(index, 1)}
+                >
+                  Move down
+                </button>
+                <button
+                  className="danger"
+                  type="button"
+                  onClick={() => removeSection(section.id)}
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+            <SectionFields
+              section={section}
+              onChange={(updater) => updateSection(section.id, updater)}
+              onUpload={uploadTo}
+            />
+          </article>
         ))}
       </div>
+    </div>
+  );
+}
 
-      <div className="stack">
-        <div className="card__header">
-          <h2>Testimonials</h2>
+function SectionFields({
+  section,
+  onChange,
+  onUpload,
+}: {
+  section: PageSection;
+  onChange: (updater: (current: PageSection) => PageSection) => void;
+  onUpload: (
+    file: File | undefined,
+    apply: (url: string) => void,
+  ) => Promise<void>;
+}) {
+  if (section.type === "hero") {
+    return (
+      <>
+        <label>
+          Eyebrow
+          <input
+            value={section.eyebrow}
+            onChange={(event) =>
+              onChange((current) =>
+                current.type === "hero"
+                  ? { ...current, eyebrow: event.target.value }
+                  : current,
+              )
+            }
+          />
+        </label>
+        <label>
+          Heading
+          <input
+            value={section.heading}
+            onChange={(event) =>
+              onChange((current) =>
+                current.type === "hero"
+                  ? { ...current, heading: event.target.value }
+                  : current,
+              )
+            }
+          />
+        </label>
+        <label>
+          Subheading
+          <textarea
+            value={section.subheading}
+            onChange={(event) =>
+              onChange((current) =>
+                current.type === "hero"
+                  ? { ...current, subheading: event.target.value }
+                  : current,
+              )
+            }
+          />
+        </label>
+      </>
+    );
+  }
+
+  if (section.type === "text") {
+    return (
+      <>
+        <label>
+          Heading
+          <input
+            value={section.heading}
+            onChange={(event) =>
+              onChange((current) =>
+                current.type === "text"
+                  ? { ...current, heading: event.target.value }
+                  : current,
+              )
+            }
+          />
+        </label>
+        <label>
+          Paragraph
+          <textarea
+            value={section.body}
+            onChange={(event) =>
+              onChange((current) =>
+                current.type === "text"
+                  ? { ...current, body: event.target.value }
+                  : current,
+              )
+            }
+          />
+        </label>
+      </>
+    );
+  }
+
+  if (section.type === "image") {
+    return (
+      <>
+        <label>
+          Heading (optional)
+          <input
+            value={section.heading}
+            onChange={(event) =>
+              onChange((current) =>
+                current.type === "image"
+                  ? { ...current, heading: event.target.value }
+                  : current,
+              )
+            }
+          />
+        </label>
+        <label>
+          Image
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={(event) =>
+              void onUpload(event.target.files?.[0], (url) =>
+                onChange((current) =>
+                  current.type === "image"
+                    ? { ...current, imageUrl: url }
+                    : current,
+                ),
+              )
+            }
+          />
+        </label>
+        {section.imageUrl ? (
+          <img className="preview-image preview-image--wide" src={section.imageUrl} alt="" />
+        ) : null}
+        <label>
+          Alt text
+          <input
+            value={section.alt}
+            onChange={(event) =>
+              onChange((current) =>
+                current.type === "image"
+                  ? { ...current, alt: event.target.value }
+                  : current,
+              )
+            }
+          />
+        </label>
+        <label>
+          Caption
+          <input
+            value={section.caption}
+            onChange={(event) =>
+              onChange((current) =>
+                current.type === "image"
+                  ? { ...current, caption: event.target.value }
+                  : current,
+              )
+            }
+          />
+        </label>
+        {section.imageUrl ? (
           <button
             className="ghost"
             type="button"
             onClick={() =>
-              setTestimonials([
-                ...testimonials,
-                {
-                  id: crypto.randomUUID(),
-                  pageSlug: slug,
-                  quote: "",
-                  authorName: "",
-                  authorRole: "",
-                  imageUrl: "",
-                  sortOrder: testimonials.length,
-                },
-              ])
+              onChange((current) =>
+                current.type === "image" ? { ...current, imageUrl: "" } : current,
+              )
             }
           >
-            Add testimonial
+            Remove image
           </button>
-        </div>
-        {testimonials.map((item, index) => (
-          <div className="card" key={item.id}>
-            <label>
-              Quote
-              <textarea
-                value={item.quote}
-                onChange={(event) =>
-                  updateTestimonial(item.id, { quote: event.target.value })
-                }
-              />
-            </label>
-            <label>
-              Name
-              <input
-                value={item.authorName}
-                onChange={(event) =>
-                  updateTestimonial(item.id, { authorName: event.target.value })
-                }
-              />
-            </label>
-            <label>
-              Role / organisation
-              <input
-                value={item.authorRole}
-                onChange={(event) =>
-                  updateTestimonial(item.id, { authorRole: event.target.value })
-                }
-              />
-            </label>
-            <label>
-              Photo (optional)
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                onChange={(event) =>
-                  void onImage(item.id, event.target.files?.[0])
-                }
-              />
-            </label>
-            {item.imageUrl ? (
-              <img className="preview-image" src={item.imageUrl} alt="" />
-            ) : null}
-            <div className="inline-actions">
-              <button
-                className="ghost"
-                type="button"
-                disabled={index === 0}
-                onClick={() => {
-                  const next = [...testimonials];
-                  [next[index - 1], next[index]] = [
-                    next[index],
-                    next[index - 1],
-                  ];
-                  setTestimonials(next);
-                }}
-              >
-                Move up
-              </button>
-              <button
-                className="ghost"
-                type="button"
-                disabled={index === testimonials.length - 1}
-                onClick={() => {
-                  const next = [...testimonials];
-                  [next[index + 1], next[index]] = [
-                    next[index],
-                    next[index + 1],
-                  ];
-                  setTestimonials(next);
-                }}
-              >
-                Move down
-              </button>
-              <button
-                className="ghost"
-                type="button"
-                onClick={() => updateTestimonial(item.id, { imageUrl: "" })}
-              >
-                Remove photo
-              </button>
-              <button
-                className="danger"
-                type="button"
-                onClick={() =>
-                  setTestimonials(
-                    testimonials.filter((entry) => entry.id !== item.id),
-                  )
-                }
-              >
-                Remove
-              </button>
-            </div>
-          </div>
+        ) : null}
+      </>
+    );
+  }
+
+  if (section.type === "gallery") {
+    return (
+      <>
+        <label>
+          Heading (optional)
+          <input
+            value={section.heading}
+            onChange={(event) =>
+              onChange((current) =>
+                current.type === "gallery"
+                  ? { ...current, heading: event.target.value }
+                  : current,
+              )
+            }
+          />
+        </label>
+        {section.images.map((image) => (
+          <GalleryImageFields
+            key={image.id}
+            image={image}
+            onChange={(patch) =>
+              onChange((current) =>
+                current.type === "gallery"
+                  ? {
+                      ...current,
+                      images: current.images.map((item) =>
+                        item.id === image.id ? { ...item, ...patch } : item,
+                      ),
+                    }
+                  : current,
+              )
+            }
+            onUpload={onUpload}
+            onRemove={() =>
+              onChange((current) =>
+                current.type === "gallery"
+                  ? {
+                      ...current,
+                      images: current.images.filter(
+                        (item) => item.id !== image.id,
+                      ),
+                    }
+                  : current,
+              )
+            }
+          />
         ))}
-      </div>
+        <label>
+          Add image
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              void onUpload(file, (url) =>
+                onChange((current) =>
+                  current.type === "gallery"
+                    ? {
+                        ...current,
+                        images: [
+                          ...current.images,
+                          { ...createGalleryImage(), imageUrl: url },
+                        ],
+                      }
+                    : current,
+                ),
+              );
+            }}
+          />
+        </label>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <label>
+        Quote
+        <textarea
+          value={section.quote}
+          onChange={(event) =>
+            onChange((current) =>
+              current.type === "testimonial"
+                ? { ...current, quote: event.target.value }
+                : current,
+            )
+          }
+        />
+      </label>
+      <label>
+        Name
+        <input
+          value={section.authorName}
+          onChange={(event) =>
+            onChange((current) =>
+              current.type === "testimonial"
+                ? { ...current, authorName: event.target.value }
+                : current,
+            )
+          }
+        />
+      </label>
+      <label>
+        Role / organisation
+        <input
+          value={section.authorRole}
+          onChange={(event) =>
+            onChange((current) =>
+              current.type === "testimonial"
+                ? { ...current, authorRole: event.target.value }
+                : current,
+            )
+          }
+        />
+      </label>
+      <label>
+        Photo (optional)
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={(event) =>
+            void onUpload(event.target.files?.[0], (url) =>
+              onChange((current) =>
+                current.type === "testimonial"
+                  ? { ...current, imageUrl: url }
+                  : current,
+              ),
+            )
+          }
+        />
+      </label>
+      {section.imageUrl ? (
+        <>
+          <img className="preview-image" src={section.imageUrl} alt="" />
+          <button
+            className="ghost"
+            type="button"
+            onClick={() =>
+              onChange((current) =>
+                current.type === "testimonial"
+                  ? { ...current, imageUrl: "" }
+                  : current,
+              )
+            }
+          >
+            Remove photo
+          </button>
+        </>
+      ) : null}
+    </>
+  );
+}
+
+function GalleryImageFields({
+  image,
+  onChange,
+  onUpload,
+  onRemove,
+}: {
+  image: GalleryImage;
+  onChange: (patch: Partial<GalleryImage>) => void;
+  onUpload: (
+    file: File | undefined,
+    apply: (url: string) => void,
+  ) => Promise<void>;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="gallery-editor-item">
+      {image.imageUrl ? (
+        <img
+          className="preview-image preview-image--wide"
+          src={image.imageUrl}
+          alt=""
+        />
+      ) : null}
+      <label>
+        Replace image
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={(event) =>
+            void onUpload(event.target.files?.[0], (url) =>
+              onChange({ imageUrl: url }),
+            )
+          }
+        />
+      </label>
+      <label>
+        Alt text
+        <input
+          value={image.alt}
+          onChange={(event) => onChange({ alt: event.target.value })}
+        />
+      </label>
+      <label>
+        Caption
+        <input
+          value={image.caption}
+          onChange={(event) => onChange({ caption: event.target.value })}
+        />
+      </label>
+      <button className="ghost" type="button" onClick={onRemove}>
+        Remove from gallery
+      </button>
     </div>
   );
 }
