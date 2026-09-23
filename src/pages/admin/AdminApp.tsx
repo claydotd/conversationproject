@@ -9,9 +9,10 @@ import {
 } from "../../lib/api";
 import { AdminLogin } from "./AdminLogin";
 import { PageEditor } from "./PageEditor";
+import { ProductsEditor } from "./ProductsEditor";
 import { SiteSettingsEditor } from "./SiteSettingsEditor";
 
-type Panel = "site" | PageSlug;
+type Panel = "site" | "products" | PageSlug;
 
 export function AdminApp() {
   const [ready, setReady] = useState(false);
@@ -134,6 +135,13 @@ export function AdminApp() {
         >
           Terms
         </button>
+        <button
+          type="button"
+          className={panel === "products" ? "active" : ""}
+          onClick={() => setPanel("products")}
+        >
+          Products
+        </button>
         <a href="/" target="_blank" rel="noreferrer">
           View site
         </a>
@@ -151,20 +159,27 @@ export function AdminApp() {
         </button>
       </aside>
       <div className="stack">
-        <div className="admin-toolbar">
-          <p className="muted">
-            Saving writes to the database once, then publishes a cached copy for
-            the public site.
-          </p>
-          <button type="button" onClick={() => void onSave()} disabled={saving}>
-            {saving ? "Publishing…" : "Save and publish"}
-          </button>
-        </div>
+        {panel !== "products" ? (
+          <div className="admin-toolbar">
+            <p className="muted">
+              Saving writes to the database once, then publishes a cached copy
+              for the public site.
+            </p>
+            <button
+              type="button"
+              onClick={() => void onSave()}
+              disabled={saving}
+            >
+              {saving ? "Publishing…" : "Save and publish"}
+            </button>
+          </div>
+        ) : null}
         {status ? <p className="banner">{status}</p> : null}
+        {panel === "products" ? <ProductsEditor /> : null}
         {content && panel === "site" ? (
           <SiteSettingsEditor content={content} setContent={updateContent} />
         ) : null}
-        {content && panel !== "site" ? (
+        {content && panel !== "site" && panel !== "products" ? (
           <PageEditor
             slug={panel}
             content={content}

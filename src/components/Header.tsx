@@ -1,16 +1,20 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
+import { TrolleyIcon } from "../icons/TrolleyIcon";
+import { useCart } from "../lib/cart-context";
 import { useSiteContent } from "../lib/content-context";
 
 const links = [
   { to: "/", label: "Home" },
   { to: "/about", label: "About" },
   { to: "/events", label: "Events" },
+  { to: "/shop", label: "Shop" },
   { to: "/contact", label: "Contact" },
 ];
 
 export function Header() {
   const { content } = useSiteContent();
+  const { itemCount } = useCart();
   const [open, setOpen] = useState(false);
 
   return (
@@ -49,6 +53,15 @@ export function Header() {
               {link.label}
             </NavLink>
           ))}
+          <NavLink
+            className="nav-cart"
+            to="/shop/cart"
+            aria-label="Trolley"
+            onClick={() => setOpen(false)}
+          >
+            <TrolleyIcon className="trolley-icon" />
+            {itemCount > 0 ? ` (${itemCount})` : ""}
+          </NavLink>
         </nav>
       </div>
     </header>

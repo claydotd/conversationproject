@@ -5,9 +5,9 @@ import {
   type EventsListing,
   type SiteEvent,
 } from "@shared/events";
+import type { SectionBackground } from "@shared/types";
+import { sectionSurfaceClass } from "@shared/page-sections";
 import { fetchEvents } from "../lib/api";
-
-type EventView = "upcoming" | "past";
 
 function EventCard({ event }: { event: SiteEvent }) {
   const place = formatEventPlace(event);
@@ -38,11 +38,15 @@ function EventCard({ event }: { event: SiteEvent }) {
   );
 }
 
-export function EventList() {
-  const [view, setView] = useState<EventView>("upcoming");
+export function EventList({
+  background = "default",
+}: {
+  background?: SectionBackground;
+}) {
   const [listing, setListing] = useState<EventsListing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const surface = sectionSurfaceClass(background);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,35 +71,19 @@ export function EventList() {
     };
   }, []);
 
-  const events = listing?.[view] ?? [];
-  const emptyMessage =
-    view === "upcoming" ? "No upcoming events" : "No past events";
+  const events = listing?.events ?? [];
 
   return (
-    <section className="section page events-section">
-      <div className="event-toggle" aria-label="Event time">
-        <button
-          type="button"
-          aria-pressed={view === "upcoming"}
-          className={view === "upcoming" ? "is-active" : ""}
-          onClick={() => setView("upcoming")}
-        >
-          Upcoming
-        </button>
-        <button
-          type="button"
-          aria-pressed={view === "past"}
-          className={view === "past" ? "is-active" : ""}
-          onClick={() => setView("past")}
-        >
-          Past
-        </button>
-      </div>
+    <section
+      className={["section", "page", "events-section", surface]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <div aria-live="polite">
         {loading ? <p className="muted">Loading events…</p> : null}
         {!loading && error ? <p className="muted">{error}</p> : null}
         {!loading && !error && events.length === 0 ? (
-          <p className="muted">{emptyMessage}</p>
+          <p className="muted">No upcoming events</p>
         ) : null}
         {!loading && !error && events.length > 0 ? (
           <div className="event-grid">

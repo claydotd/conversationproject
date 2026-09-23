@@ -15,7 +15,28 @@ const CACHE_HEADERS = {
 };
 
 function emptyListing(): EventsListing {
-  return { upcoming: [], past: [], fetchedAt: null };
+  return { events: [], fetchedAt: null };
+}
+
+function normalizeListing(value: unknown): EventsListing | null {
+  if (!value || typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  const fetchedAt =
+    typeof record.fetchedAt === "string" ? record.fetchedAt : null;
+
+  if (Array.isArray(record.events)) {
+    return { events: record.events as EventsListing["events"], fetchedAt };
+  }
+
+  // Older cache shape used upcoming/past before past was removed.
+  if (Array.isArray(record.upcoming)) {
+    return {
+      events: record.upcoming as EventsListing["events"],
+      fetchedAt,
+    };
+  }
+
+  return null;
 }
 
 function isFresh(listing: EventsListing | null): listing is EventsListing {
@@ -28,7 +49,7 @@ export default async (req: Request, _context: Context) => {
   if (req.method !== "GET") {
     return errorJson("Method not allowed", 405);
   }
-  const cached = await readCachedEvents().catch(() => null);
+  const cached = normalizeListing(await readCachedEvents().catch(() => null));
   if (isFresh(cached)) {
     return json(cached, 200, CACHE_HEADERS);
   }

@@ -30,10 +30,12 @@
   [headers.values]
     Cache-Control = "public, max-age=60, stale-while-revalidate=86400"
 
+[[headers]]
+  for = "/api/products"
+  [headers.values]
+    Cache-Control = "public, max-age=60, stale-while-revalidate=86400"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-# Future integration (not wired yet):
-# - SumUp shop at /shop

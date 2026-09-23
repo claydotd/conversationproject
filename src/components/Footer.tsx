@@ -20,9 +20,12 @@ export function Footer() {
             <Link to="/terms">Terms and conditions</Link>
           </div>
         </div>
-        <p className="site-footer__copy">
-          © {year} {content.site.name}. {content.site.footerText}
-        </p>
+        <div className="site-footer__bottom">
+          <p className="site-footer__copy">
+            © {year} {content.site.name}. {content.site.footerText}
+          </p>
+          <p className="made-by">Site made by <a href="https://analoguegonedigital.co.uk" target="_blank" rel="noopener noreferrer">analoguegonedigital.co.uk</a></p>
+        </div>
       </div>
     </footer>
   );

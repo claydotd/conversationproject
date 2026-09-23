@@ -19,6 +19,8 @@ const home: PageContent = {
       background: "default",
       heading: "A practice, not a script",
       body: "Most workplaces are full of meetings and short on meaning. We design spaces where people can say the thing that has been sitting unspoken, then leave with a shared next step.\n\nWhether you are gathering a leadership team, a community, or a room of strangers, the work is the same: listen well, name what is true, and keep the conversation human.",
+      headingAlign: "left",
+      bodyAlign: "left",
     },
     {
       id: "home-work-with-us",
@@ -26,6 +28,8 @@ const home: PageContent = {
       background: "default",
       heading: "Ways we work",
       body: "Facilitation for offsites and difficult decisions. Coaching for leaders who want a more honest room. Workshops that give teams a shared language for feedback, conflict, and care.\n\nEvery engagement is tailored. Tell us what is stuck, and we will help you find the conversation that unlocks it.",
+      headingAlign: "left",
+      bodyAlign: "left",
     },
     {
       id: "00000000-0000-4000-8000-000000000001",
@@ -72,6 +76,8 @@ const about: PageContent = {
       background: "default",
       heading: "Why this exists",
       body: "We started this work after sitting in too many rooms where the real conversation happened in the corridor afterwards. The project is a response to that: slower on purpose, structured enough to feel safe, and honest enough to be useful.\n\nOur background sits at the meeting point of facilitation, coaching, and organisational development. We are less interested in performance and more interested in what becomes possible when people tell the truth kindly.",
+      headingAlign: "left",
+      bodyAlign: "left",
     },
     {
       id: "about-approach",
@@ -79,6 +85,8 @@ const about: PageContent = {
       background: "default",
       heading: "How we show up",
       body: "We prepare carefully, hold the room firmly, and leave people with language they can keep using without us. You will not get a slide deck of values. You will get a way of speaking that can survive Monday morning.",
+      headingAlign: "left",
+      bodyAlign: "left",
     },
     {
       id: "00000000-0000-4000-8000-000000000003",
@@ -115,6 +123,13 @@ const contact: PageContent = {
       background: "default",
       heading: "What to include",
       body: "A few sentences is enough: who would be in the room, what you are hoping will be different afterwards, and any dates you already have in mind. If you are not sure yet, that is useful information too.",
+      headingAlign: "left",
+      bodyAlign: "left",
+    },
+    {
+      id: "contact-form",
+      type: "contact-form",
+      background: "default",
     },
     {
       id: "00000000-0000-4000-8000-000000000004",
@@ -151,6 +166,8 @@ const terms: PageContent = {
       background: "default",
       heading: "Using this website",
       body: "This website is provided by The Conversation Project to share our work and make it easy to get in touch. Please use it in good faith. Do not attempt to disrupt the site, misuse forms, or copy content without permission.\n\nEvent listings may link out to Eventbrite or other third-party pages. Those services have their own terms, and we are not responsible for their content or booking processes.",
+      headingAlign: "left",
+      bodyAlign: "left",
     },
     {
       id: "terms-newsletter",
@@ -158,6 +175,8 @@ const terms: PageContent = {
       background: "default",
       heading: "Newsletter and contact details",
       body: "If you sign up to the newsletter, we use your first name, last name, and email address to send news and updates about upcoming workshops and related work. The consent checkbox is required: we will not add you unless you agree.\n\nYou can unsubscribe at any time using the link in our emails, or by contacting us. If you write to us through the contact form, we will use the details you send only to reply and to follow up on your enquiry.\n\nWe do not sell your personal details.",
+      headingAlign: "left",
+      bodyAlign: "left",
     },
     {
       id: "terms-changes",
@@ -165,6 +184,8 @@ const terms: PageContent = {
       background: "default",
       heading: "Changes",
       body: "We may update these terms as the site or our work changes. The latest version will always appear on this page. If you have questions, please contact us.",
+      headingAlign: "left",
+      bodyAlign: "left",
     },
   ],
   seoTitle: "Terms and conditions — The Conversation Project",
@@ -190,7 +211,14 @@ const events: PageContent = {
       type: "text",
       background: "default",
       heading: "What to expect",
-      body: "These are relaxed, structured conversations — not networking, not a lecture. A few prompts, a room of people willing to talk, and enough time to say the thing that usually stays unsaid.\n\nChoose an upcoming date below, or look back at past events. Each card takes you to Eventbrite for tickets and the practical details.",
+      body: "These are relaxed, structured conversations — not networking, not a lecture. A few prompts, a room of people willing to talk, and enough time to say the thing that usually stays unsaid.\n\nChoose an upcoming date below. Each card takes you to Eventbrite for tickets and the practical details.",
+      headingAlign: "left",
+      bodyAlign: "left",
+    },
+    {
+      id: "events-list",
+      type: "events-list",
+      background: "default",
     },
   ],
   seoTitle: "Events — The Conversation Project",

@@ -2,18 +2,22 @@ import type { Dispatch, SetStateAction } from "react";
 import {
   createGalleryImage,
   createPageSection,
+  isPermanentSectionType,
   SECTION_BACKGROUND_LABELS,
   SECTION_TYPE_LABELS,
+  TEXT_ALIGN_LABELS,
 } from "@shared/page-sections";
 import {
+  ADDABLE_SECTION_TYPES,
   SECTION_BACKGROUNDS,
-  SECTION_TYPES,
+  TEXT_ALIGNS,
   type GalleryImage,
   type PageSection,
   type PageSlug,
   type SectionBackground,
   type SectionType,
   type SiteContent,
+  type TextAlign,
 } from "@shared/types";
 import { uploadAdminImage } from "../../lib/api";
 
@@ -66,7 +70,12 @@ export function PageEditor({
   }
 
   function removeSection(id: string) {
-    setSections(page.sections.filter((section) => section.id !== id));
+    setSections(
+      page.sections.filter(
+        (section) =>
+          section.id !== id || isPermanentSectionType(section.type),
+      ),
+    );
   }
 
   async function uploadTo(
@@ -82,7 +91,13 @@ export function PageEditor({
     <div className="admin-panel">
       <h1>{page.title}</h1>
       <p className="muted">
-        Here you can build each page's content using different types ofsections Saving publishes the live site. <em>Please note: It takes a few seconds after saving for the changes to appear.</em>
+        Build each page from sections. Permanent blocks (events list, contact
+        form) stay on their page but can be moved so other sections sit before
+        or after them. Saving publishes the live site.{" "}
+        <em>
+          Please note: it takes a few seconds after saving for the changes to
+          appear.
+        </em>
       </p>
       <div className="field-grid">
         <label>
@@ -115,7 +130,7 @@ export function PageEditor({
           <h2>Page sections</h2>
         </div>
         <div className="add-section">
-          {SECTION_TYPES.map((type) => (
+          {ADDABLE_SECTION_TYPES.map((type) => (
             <button
               className="ghost"
               type="button"
@@ -132,54 +147,63 @@ export function PageEditor({
             hero.
           </p>
         ) : null}
-        {page.sections.map((section, index) => (
-          <article className="card" key={section.id}>
-            <div className="section-card__meta">
-              <p className="section-type-label">
-                {SECTION_TYPE_LABELS[section.type]}
-              </p>
-              <div className="inline-actions">
-                <button
-                  className="ghost"
-                  type="button"
-                  disabled={index === 0}
-                  onClick={() => moveSection(index, -1)}
-                >
-                  Move up
-                </button>
-                <button
-                  className="ghost"
-                  type="button"
-                  disabled={index === page.sections.length - 1}
-                  onClick={() => moveSection(index, 1)}
-                >
-                  Move down
-                </button>
-                <button
-                  className="danger"
-                  type="button"
-                  onClick={() => removeSection(section.id)}
-                >
-                  Remove
-                </button>
+        {page.sections.map((section, index) => {
+          const permanent = isPermanentSectionType(section.type);
+          return (
+            <article
+              className={`card${permanent ? " card--permanent" : ""}`}
+              key={section.id}
+            >
+              <div className="section-card__meta">
+                <p className="section-type-label">
+                  {SECTION_TYPE_LABELS[section.type]}
+                  {permanent ? " · Permanent" : ""}
+                </p>
+                <div className="inline-actions">
+                  <button
+                    className="ghost"
+                    type="button"
+                    disabled={index === 0}
+                    onClick={() => moveSection(index, -1)}
+                  >
+                    Move up
+                  </button>
+                  <button
+                    className="ghost"
+                    type="button"
+                    disabled={index === page.sections.length - 1}
+                    onClick={() => moveSection(index, 1)}
+                  >
+                    Move down
+                  </button>
+                  {!permanent ? (
+                    <button
+                      className="danger"
+                      type="button"
+                      onClick={() => removeSection(section.id)}
+                    >
+                      Remove
+                    </button>
+                  ) : null}
+                </div>
               </div>
-            </div>
-            <BackgroundPicker
-              value={section.background}
-              onChange={(background) =>
-                updateSection(section.id, (current) => ({
-                  ...current,
-                  background,
-                }))
-              }
-            />
-            <SectionFields
-              section={section}
-              onChange={(updater) => updateSection(section.id, updater)}
-              onUpload={uploadTo}
-            />
-          </article>
-        ))}
+              <BackgroundPicker
+                value={section.background}
+                onChange={(background) =>
+                  updateSection(section.id, (current) => ({
+                    ...current,
+                    background,
+                  }))
+                }
+              />
+              <SectionFields
+                section={section}
+                onChange={(updater) => updateSection(section.id, updater)}
+                onUpload={uploadTo}
+              />
+            </article>
+          );
+        })}
       </div>
     </div>
   );
@@ -226,6 +250,39 @@ function BackgroundPicker({
   );
 }
 
+function AlignPicker({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: TextAlign;
+  onChange: (align: TextAlign) => void;
+}) {
+  return (
+    <fieldset className="align-picker">
+      <legend>{label}</legend>
+      <div className="align-picker__options" role="radiogroup" aria-label={label}>
+        {TEXT_ALIGNS.map((align) => {
+          const selected = align === value;
+          return (
+            <button
+              key={align}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              className={`align-option${selected ? " is-selected" : ""}`}
+              onClick={() => onChange(align)}
+            >
+              {TEXT_ALIGN_LABELS[align]}
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
 function SectionFields({
   section,
   onChange,
@@ -238,6 +295,24 @@ function SectionFields({
     apply: (url: string) => void,
   ) => Promise<void>;
 }) {
+  if (section.type === "events-list") {
+    return (
+      <p className="muted permanent-note">
+        This block shows the live Eventbrite listing. Move it up or down to place
+        other sections before or after it.
+      </p>
+    );
+  }
+
+  if (section.type === "contact-form") {
+    return (
+      <p className="muted permanent-note">
+        This block shows the contact form and direct details. Move it up or down
+        to place other sections before or after it.
+      </p>
+    );
+  }
+
   if (section.type === "hero") {
     return (
       <>
@@ -300,6 +375,15 @@ function SectionFields({
             }
           />
         </label>
+        <AlignPicker
+          label="Heading alignment"
+          value={section.headingAlign}
+          onChange={(headingAlign) =>
+            onChange((current) =>
+              current.type === "text" ? { ...current, headingAlign } : current,
+            )
+          }
+        />
         <label>
           Paragraph
           <textarea
@@ -313,6 +397,15 @@ function SectionFields({
             }
           />
         </label>
+        <AlignPicker
+          label="Paragraph alignment"
+          value={section.bodyAlign}
+          onChange={(bodyAlign) =>
+            onChange((current) =>
+              current.type === "text" ? { ...current, bodyAlign } : current,
+            )
+          }
+        />
       </>
     );
   }

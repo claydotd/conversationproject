@@ -2,8 +2,10 @@ import {
   SECTION_BACKGROUNDS,
   type GalleryImage,
   type PageSection,
+  type PermanentSectionType,
   type SectionBackground,
   type SectionType,
+  type TextAlign,
 } from "./types";
 
 export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
@@ -12,6 +14,14 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   image: "Image block",
   gallery: "Image gallery",
   testimonial: "Testimonial",
+  "events-list": "Events list",
+  "contact-form": "Contact form",
+};
+
+export const TEXT_ALIGN_LABELS: Record<TextAlign, string> = {
+  left: "Left",
+  center: "Center",
+  right: "Right",
 };
 
 export const SECTION_BACKGROUND_LABELS: Record<SectionBackground, string> = {
@@ -36,6 +46,18 @@ const INVERSE_BACKGROUNDS = new Set<SectionBackground>([
   "accent-deep",
   "sage",
 ]);
+
+const PERMANENT_TYPES = new Set<string>(["events-list", "contact-form"]);
+
+export function isPermanentSectionType(
+  type: SectionType,
+): type is PermanentSectionType {
+  return PERMANENT_TYPES.has(type);
+}
+
+export function isTextAlign(value: unknown): value is TextAlign {
+  return value === "left" || value === "center" || value === "right";
+}
 
 export function isSectionBackground(
   value: unknown,
@@ -75,7 +97,15 @@ export function createPageSection(type: SectionType): PageSection {
     case "hero":
       return { id, type, background, eyebrow: "", heading: "", subheading: "" };
     case "text":
-      return { id, type, background, heading: "", body: "" };
+      return {
+        id,
+        type,
+        background,
+        heading: "",
+        body: "",
+        headingAlign: "left",
+        bodyAlign: "left",
+      };
     case "image":
       return {
         id,
@@ -98,5 +128,9 @@ export function createPageSection(type: SectionType): PageSection {
         authorRole: "",
         imageUrl: "",
       };
+    case "events-list":
+      return { id, type, background };
+    case "contact-form":
+      return { id, type, background };
   }
 }

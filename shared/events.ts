@@ -1,11 +1,7 @@
 export const DEFAULT_EVENTBRITE_ORGANIZER_ID = "114391829571";
 
-export const PUBLIC_EVENT_STATUSES = [
-  "live",
-  "started",
-  "ended",
-  "completed",
-] as const;
+/** Only current/upcoming statuses — past Eventbrite events are not listed on the site. */
+export const PUBLIC_EVENT_STATUSES = ["live", "started"] as const;
 
 export interface EventbriteVenue {
   name: string;
@@ -26,8 +22,7 @@ export interface SiteEvent {
 }
 
 export interface EventsListing {
-  upcoming: SiteEvent[];
-  past: SiteEvent[];
+  events: SiteEvent[];
   fetchedAt: string | null;
 }
 
@@ -102,26 +97,17 @@ export function mapEventbriteEvent(value: unknown): SiteEvent | null {
   };
 }
 
-export function splitEventsByTime(
+/** Keep events that have not ended yet, sorted soonest first. */
+export function sortUpcomingEvents(
   events: SiteEvent[],
   now = Date.now(),
-): Pick<EventsListing, "upcoming" | "past"> {
-  const upcoming: SiteEvent[] = [];
-  const past: SiteEvent[] = [];
-
-  for (const event of events) {
-    const end = Date.parse(event.end || event.start);
-    if (Number.isFinite(end) && end < now) {
-      past.push(event);
-    } else {
-      upcoming.push(event);
-    }
-  }
-
-  upcoming.sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
-  past.sort((a, b) => Date.parse(b.start) - Date.parse(a.start));
-
-  return { upcoming, past };
+): SiteEvent[] {
+  return events
+    .filter((event) => {
+      const end = Date.parse(event.end || event.start);
+      return !Number.isFinite(end) || end >= now;
+    })
+    .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
 }
 
 export function formatEventSchedule(event: SiteEvent): string {

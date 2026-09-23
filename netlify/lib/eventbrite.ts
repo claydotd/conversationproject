@@ -1,7 +1,7 @@
 import {
   DEFAULT_EVENTBRITE_ORGANIZER_ID,
   mapEventbriteEvent,
-  splitEventsByTime,
+  sortUpcomingEvents,
   type EventsListing,
   type SiteEvent,
 } from "../../shared/events";
@@ -78,12 +78,14 @@ async function fetchPagedEvents(
   const events: unknown[] = [];
   let continuation = "";
   let page = 1;
+  // /organizers/:id/events rejects time_filter; /organizations/:id/events accepts it.
+  const supportsTimeFilter = path.includes("/organizations/");
 
   for (let i = 0; i < MAX_PAGES; i++) {
     const data = await eventbriteGet(token, path, {
       expand: "venue",
-      time_filter: "all",
       order_by: "start_asc",
+      ...(supportsTimeFilter ? { time_filter: "all" } : {}),
       ...(continuation ? { continuation } : { page: String(page) }),
       ...extra,
     });
@@ -165,7 +167,7 @@ export async function fetchEventbriteListing(): Promise<EventsListing> {
     .filter((item): item is SiteEvent => item !== null);
 
   return {
-    ...splitEventsByTime(events),
+    events: sortUpcomingEvents(events),
     fetchedAt: new Date().toISOString(),
   };
 }

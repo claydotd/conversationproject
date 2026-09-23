@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
-import type { PageSection, SectionBackground } from "@shared/types";
+import type { PageSection, SectionBackground, TextAlign } from "@shared/types";
 import { sectionSurfaceClass } from "@shared/page-sections";
+import { ContactForm } from "./ContactForm";
+import { EventList } from "./EventList";
 import { PageHero } from "./PageHero";
 import { TestimonialSection } from "./TestimonialSection";
 
@@ -12,6 +14,10 @@ function paragraphs(text: string, id: string) {
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
+}
+
+function alignClass(align: TextAlign) {
+  return `text-align-${align}`;
 }
 
 function SectionFrame({
@@ -35,17 +41,27 @@ function TextBlock({
   body,
   id,
   background,
+  headingAlign,
+  bodyAlign,
 }: {
   heading: string;
   body: string;
   id: string;
   background: SectionBackground;
+  headingAlign: TextAlign;
+  bodyAlign: TextAlign;
 }) {
   if (!heading && !body) return null;
   return (
     <SectionFrame className="section" background={background}>
-      {heading ? <h2>{heading}</h2> : null}
-      {body ? <div className="prose">{paragraphs(body, id)}</div> : null}
+      {heading ? (
+        <h2 className={alignClass(headingAlign)}>{heading}</h2>
+      ) : null}
+      {body ? (
+        <div className={cx("prose", alignClass(bodyAlign))}>
+          {paragraphs(body, id)}
+        </div>
+      ) : null}
     </SectionFrame>
   );
 }
@@ -120,6 +136,8 @@ function SectionView({ section }: { section: PageSection }) {
           heading={section.heading}
           body={section.body}
           background={section.background}
+          headingAlign={section.headingAlign}
+          bodyAlign={section.bodyAlign}
         />
       );
     case "image":
@@ -142,6 +160,10 @@ function SectionView({ section }: { section: PageSection }) {
       );
     case "testimonial":
       return <TestimonialSection item={section} />;
+    case "events-list":
+      return <EventList background={section.background} />;
+    case "contact-form":
+      return <ContactForm background={section.background} />;
   }
 }
 

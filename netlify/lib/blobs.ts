@@ -17,6 +17,10 @@ export function eventsStore() {
   return getStore("events-cache");
 }
 
+export function productFilesStore() {
+  return getStore("product-files");
+}
+
 export async function readPublishedContent(): Promise<SiteContent | null> {
   const store = contentStore();
   return (await store.get(CONTENT_KEY, { type: "json" })) as SiteContent | null;

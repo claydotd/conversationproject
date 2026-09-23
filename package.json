@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db:migrate": "netlify database migrations apply",
+    "test:eventbrite": "node scripts/test-eventbrite.mjs"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.0",

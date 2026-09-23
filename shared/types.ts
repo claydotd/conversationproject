@@ -7,8 +7,29 @@ export const SECTION_TYPES = [
   "image",
   "gallery",
   "testimonial",
+  "events-list",
+  "contact-form",
 ] as const;
 export type SectionType = (typeof SECTION_TYPES)[number];
+
+/** Section types editors can add; permanent page blocks are excluded. */
+export const ADDABLE_SECTION_TYPES = [
+  "hero",
+  "text",
+  "image",
+  "gallery",
+  "testimonial",
+] as const;
+export type AddableSectionType = (typeof ADDABLE_SECTION_TYPES)[number];
+
+export const PERMANENT_SECTION_TYPES = [
+  "events-list",
+  "contact-form",
+] as const;
+export type PermanentSectionType = (typeof PERMANENT_SECTION_TYPES)[number];
+
+export const TEXT_ALIGNS = ["left", "center", "right"] as const;
+export type TextAlign = (typeof TEXT_ALIGNS)[number];
 
 export const SECTION_BACKGROUNDS = [
   "default",
@@ -59,6 +80,16 @@ export interface TextSection extends PageSectionBase {
   type: "text";
   heading: string;
   body: string;
+  headingAlign: TextAlign;
+  bodyAlign: TextAlign;
+}
+
+export interface EventsListSection extends PageSectionBase {
+  type: "events-list";
+}
+
+export interface ContactFormSection extends PageSectionBase {
+  type: "contact-form";
 }
 
 export interface ImageSection extends PageSectionBase {
@@ -95,7 +126,9 @@ export type PageSection =
   | TextSection
   | ImageSection
   | GallerySection
-  | TestimonialSection;
+  | TestimonialSection
+  | EventsListSection
+  | ContactFormSection;
 
 export interface PageContent {
   slug: PageSlug;
@@ -122,11 +155,18 @@ export interface SiteContent {
   publishedAt: string | null;
 }
 
-export const UPCOMING_FEATURES = {
+export const SITE_FEATURES = {
   shop: {
     path: "/shop",
     provider: "sumup",
-    envVars: ["SUMUP_API_KEY", "SUMUP_MERCHANT_CODE", "SUMUP_PAY_TO_EMAIL"],
+    envVars: [
+      "SUMUP_API_KEY",
+      "SUMUP_MERCHANT_CODE",
+      "SUMUP_PAY_TO_EMAIL",
+      "RESEND_API_KEY",
+      "RESEND_FROM_EMAIL",
+      "PUBLIC_SITE_URL",
+    ],
   },
   events: {
     path: "/events",

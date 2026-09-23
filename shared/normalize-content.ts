@@ -1,4 +1,4 @@
-import { createSectionId, isSectionBackground } from "./page-sections";
+import { createSectionId, isSectionBackground, isTextAlign } from "./page-sections";
 import { defaultContent } from "./default-content";
 import {
   PAGE_SLUGS,
@@ -10,6 +10,7 @@ import {
   type SiteContent,
   type SiteSettings,
   type Testimonial,
+  type TextAlign,
 } from "./types";
 
 interface LegacyPage extends Omit<PageContent, "sections"> {
@@ -45,6 +46,10 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 
 function normalizeBackground(value: unknown): SectionBackground {
   return isSectionBackground(value) ? value : "default";
+}
+
+function normalizeTextAlign(value: unknown): TextAlign {
+  return isTextAlign(value) ? value : "left";
 }
 
 function normalizeGalleryImage(value: unknown): GalleryImage | null {
@@ -85,6 +90,8 @@ function normalizeSection(value: unknown): PageSection | null {
       background,
       heading: asString(item.heading),
       body: asString(item.body),
+      headingAlign: normalizeTextAlign(item.headingAlign),
+      bodyAlign: normalizeTextAlign(item.bodyAlign),
     };
   }
 
@@ -125,6 +132,14 @@ function normalizeSection(value: unknown): PageSection | null {
       authorRole: asString(item.authorRole),
       imageUrl: asString(item.imageUrl),
     };
+  }
+
+  if (type === "events-list") {
+    return { id, type: "events-list", background };
+  }
+
+  if (type === "contact-form") {
+    return { id, type: "contact-form", background };
   }
 
   return null;
@@ -172,13 +187,48 @@ export function heroFieldsFromPage(page: PageContent): {
   };
 }
 
+function ensurePermanentSection(
+  slug: PageSlug,
+  sections: PageSection[],
+): PageSection[] {
+  if (slug === "events") {
+    if (sections.some((section) => section.type === "events-list")) {
+      return sections;
+    }
+    return [
+      ...sections,
+      {
+        id: "events-list",
+        type: "events-list",
+        background: "default",
+      },
+    ];
+  }
+
+  if (slug === "contact") {
+    if (sections.some((section) => section.type === "contact-form")) {
+      return sections;
+    }
+    return [
+      ...sections,
+      {
+        id: "contact-form",
+        type: "contact-form",
+        background: "default",
+      },
+    ];
+  }
+
+  return sections;
+}
+
 function normalizePage(
   slug: PageSlug,
   raw: LegacyPage | undefined,
   testimonials: Testimonial[],
 ): PageContent {
   const title = asString(raw?.title) || PAGE_TITLES[slug];
-  const sections = Array.isArray(raw?.sections)
+  let sections = Array.isArray(raw?.sections)
     ? raw.sections
         .map(normalizeSection)
         .filter((section): section is PageSection => section !== null)
@@ -214,6 +264,8 @@ function normalizePage(
       });
     }
   }
+
+  sections = ensurePermanentSection(slug, sections);
 
   return {
     slug,
