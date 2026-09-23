@@ -26,6 +26,7 @@ export default async (req: Request, _context: Context) => {
           priceCents: product.priceCents,
           currency: product.currency,
           kind: product.kind,
+          imageUrl: product.imageUrl ?? null,
           inventory: product.inventory,
           published: product.published,
           sortOrder: product.sortOrder,

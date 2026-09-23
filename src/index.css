@@ -797,6 +797,12 @@ p:last-child {
   gap: 0.8rem;
 }
 
+.card--editing {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--paper));
+}
+
 .card--permanent {
   border-style: dashed;
   background: #faf8f4;

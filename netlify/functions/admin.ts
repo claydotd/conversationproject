@@ -148,6 +148,13 @@ function parseProductBody(body: Record<string, unknown>) {
     downloadBlobKeyRaw === ""
       ? null
       : String(downloadBlobKeyRaw);
+  const imageUrlRaw = body.imageUrl;
+  const imageUrl =
+    imageUrlRaw === null ||
+    imageUrlRaw === undefined ||
+    imageUrlRaw === ""
+      ? null
+      : String(imageUrlRaw);
 
   if (!name) return { error: "Product name is required." };
   if (!PRODUCT_KINDS.has(kind)) {
@@ -171,6 +178,7 @@ function parseProductBody(body: Record<string, unknown>) {
       published,
       inventory,
       sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0,
+      imageUrl,
       downloadBlobKey: kind === "digital" ? downloadBlobKey : null,
     },
   };

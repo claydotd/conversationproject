@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   formatPricePounds,
   slugifyProductName,
@@ -9,6 +9,7 @@ import {
   createAdminProduct,
   fetchAdminProducts,
   updateAdminProduct,
+  uploadAdminImage,
   uploadAdminProductFile,
 } from "../../lib/api";
 
@@ -22,6 +23,7 @@ interface Draft {
   published: boolean;
   inventory: string;
   sortOrder: string;
+  imageUrl: string;
   downloadBlobKey: string;
 }
 
@@ -36,6 +38,7 @@ function toDraft(product?: Product): Draft {
       published: true,
       inventory: "",
       sortOrder: "0",
+      imageUrl: "",
       downloadBlobKey: "",
     };
   }
@@ -52,6 +55,7 @@ function toDraft(product?: Product): Draft {
         ? ""
         : String(product.inventory),
     sortOrder: String(product.sortOrder ?? 0),
+    imageUrl: product.imageUrl ?? "",
     downloadBlobKey: product.downloadBlobKey ?? "",
   };
 }
@@ -73,6 +77,7 @@ function draftToPayload(draft: Draft): Omit<Product, "id"> {
     published: draft.published,
     inventory: Number.isFinite(inventory as number) ? inventory : null,
     sortOrder: Math.floor(Number(draft.sortOrder) || 0),
+    imageUrl: draft.imageUrl.trim() || null,
     downloadBlobKey:
       draft.kind === "digital" ? draft.downloadBlobKey || null : null,
   };
@@ -85,6 +90,8 @@ export function ProductsEditor() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   async function reload() {
     const next = await fetchAdminProducts();
@@ -100,6 +107,24 @@ export function ProductsEditor() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  function scrollToForm() {
+    window.requestAnimationFrame(() => {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function startNewProduct() {
+    setDraft(toDraft());
+    setStatus("");
+    scrollToForm();
+  }
+
+  function startEdit(product: Product) {
+    setDraft(toDraft(product));
+    setStatus("");
+    scrollToForm();
+  }
 
   async function onSave(event: FormEvent) {
     event.preventDefault();
@@ -123,7 +148,7 @@ export function ProductsEditor() {
     }
   }
 
-  async function onUpload(file: File | null) {
+  async function onUploadFile(file: File | null) {
     if (!file) return;
     setUploading(true);
     setStatus("");
@@ -138,9 +163,29 @@ export function ProductsEditor() {
     }
   }
 
+  async function onUploadImage(file: File | null) {
+    if (!file) return;
+    setUploadingImage(true);
+    setStatus("");
+    try {
+      const url = await uploadAdminImage(file);
+      setDraft((current) => ({ ...current, imageUrl: url }));
+      setStatus("Image uploaded. Save the product to keep it.");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Image upload failed.");
+    } finally {
+      setUploadingImage(false);
+    }
+  }
+
   return (
     <div className="admin-panel stack">
-      <h1>Products</h1>
+      <div className="admin-toolbar">
+        <h1>Products</h1>
+        <button type="button" className="ghost" onClick={startNewProduct}>
+          New product
+        </button>
+      </div>
       <p className="muted">
         Changes save immediately to the database. Published products appear in
         the public shop.
@@ -151,7 +196,12 @@ export function ProductsEditor() {
       {!loading ? (
         <div className="stack">
           {products.map((product) => (
-            <div key={product.id} className="card">
+            <div
+              key={product.id}
+              className={
+                draft.id === product.id ? "card card--editing" : "card"
+              }
+            >
               <div className="card__header">
                 <div>
                   <strong>{product.name}</strong>
@@ -164,7 +214,7 @@ export function ProductsEditor() {
                 <button
                   type="button"
                   className="ghost"
-                  onClick={() => setDraft(toDraft(product))}
+                  onClick={() => startEdit(product)}
                 >
                   Edit
                 </button>
@@ -174,18 +224,13 @@ export function ProductsEditor() {
         </div>
       ) : null}
 
-      <form className="card field-grid" onSubmit={(event) => void onSave(event)}>
+      <form
+        ref={formRef}
+        className="card field-grid"
+        onSubmit={(event) => void onSave(event)}
+      >
         <div className="card__header">
           <h2>{draft.id ? "Edit product" : "Add product"}</h2>
-          {draft.id ? (
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => setDraft(toDraft())}
-            >
-              New product
-            </button>
-          ) : null}
         </div>
 
         <label>
@@ -261,6 +306,8 @@ export function ProductsEditor() {
           <label>
             Sort order
             <input
+              type="number"
+              step={1}
               value={draft.sortOrder}
               onChange={(event) =>
                 setDraft((current) => ({
@@ -274,6 +321,9 @@ export function ProductsEditor() {
         <label>
           Inventory (optional)
           <input
+            type="number"
+            min={0}
+            step={1}
             value={draft.inventory}
             onChange={(event) =>
               setDraft((current) => ({
@@ -297,6 +347,41 @@ export function ProductsEditor() {
           Published in shop
         </label>
 
+        <div className="stack">
+          <label>
+            Product image
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={(event) =>
+                void onUploadImage(event.target.files?.[0] ?? null)
+              }
+            />
+          </label>
+          {draft.imageUrl ? (
+            <div className="stack">
+              <img
+                className="preview-image preview-image--wide"
+                src={draft.imageUrl}
+                alt=""
+              />
+              <button
+                type="button"
+                className="ghost"
+                onClick={() =>
+                  setDraft((current) => ({ ...current, imageUrl: "" }))
+                }
+              >
+                Remove image
+              </button>
+            </div>
+          ) : (
+            <p className="muted">
+              {uploadingImage ? "Uploading image…" : "No image uploaded yet."}
+            </p>
+          )}
+        </div>
+
         {draft.kind === "digital" ? (
           <div className="stack">
             <label>
@@ -305,7 +390,7 @@ export function ProductsEditor() {
                 type="file"
                 accept=".pdf,.zip,.epub,.txt,.png,.jpg,.jpeg"
                 onChange={(event) =>
-                  void onUpload(event.target.files?.[0] ?? null)
+                  void onUploadFile(event.target.files?.[0] ?? null)
                 }
               />
             </label>
@@ -319,7 +404,7 @@ export function ProductsEditor() {
           </div>
         ) : null}
 
-        <button type="submit" disabled={saving || uploading}>
+        <button type="submit" disabled={saving || uploading || uploadingImage}>
           {saving ? "Saving…" : draft.id ? "Update product" : "Create product"}
         </button>
       </form>
