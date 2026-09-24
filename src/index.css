@@ -215,7 +215,7 @@ p:last-child {
   max-width: 18rem;
 }
 
-@media (max-width: 768px) {
+/* @media (max-width: 768px) {
   .brand {
     gap: 0.55rem;
   }
@@ -231,9 +231,8 @@ p:last-child {
 
   .brand__tagline {
     font-size: 0.7rem;
-    max-width: 12rem;
   }
-}
+} */
 
 /* Navigation */
 
