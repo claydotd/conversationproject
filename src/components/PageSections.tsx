@@ -1,10 +1,39 @@
 import type { ReactNode } from "react";
-import type { PageSection, SectionBackground, TextAlign } from "@shared/types";
+import type {
+  PageSection,
+  SectionBackground,
+  TestimonialSection as TestimonialContent,
+  TextAlign,
+} from "@shared/types";
 import { sectionSurfaceClass } from "@shared/page-sections";
 import { ContactForm } from "./ContactForm";
 import { EventList } from "./EventList";
 import { PageHero } from "./PageHero";
-import { TestimonialSection } from "./TestimonialSection";
+import { TestimonialsClothesline } from "./TestimonialSection";
+
+type SectionCluster =
+  | { kind: "section"; section: PageSection }
+  | { kind: "testimonials"; items: TestimonialContent[] };
+
+function clusterSections(sections: PageSection[]): SectionCluster[] {
+  const clusters: SectionCluster[] = [];
+
+  for (const section of sections) {
+    if (section.type === "testimonial") {
+      const last = clusters[clusters.length - 1];
+      if (last?.kind === "testimonials") {
+        last.items.push(section);
+      } else {
+        clusters.push({ kind: "testimonials", items: [section] });
+      }
+      continue;
+    }
+
+    clusters.push({ kind: "section", section });
+  }
+
+  return clusters;
+}
 
 function paragraphs(text: string, id: string) {
   return text.split(/\n{2,}/).map((paragraph, index) => (
@@ -159,7 +188,7 @@ function SectionView({ section }: { section: PageSection }) {
         />
       );
     case "testimonial":
-      return <TestimonialSection item={section} />;
+      return <TestimonialsClothesline items={[section]} />;
     case "events-list":
       return <EventList background={section.background} />;
     case "contact-form":
@@ -170,9 +199,16 @@ function SectionView({ section }: { section: PageSection }) {
 export function PageSections({ sections }: { sections: PageSection[] }) {
   return (
     <div className="page-stack">
-      {sections.map((section) => (
-        <SectionView key={section.id} section={section} />
-      ))}
+      {clusterSections(sections).map((cluster) =>
+        cluster.kind === "testimonials" ? (
+          <TestimonialsClothesline
+            key={cluster.items[0].id}
+            items={cluster.items}
+          />
+        ) : (
+          <SectionView key={cluster.section.id} section={cluster.section} />
+        ),
+      )}
     </div>
   );
 }

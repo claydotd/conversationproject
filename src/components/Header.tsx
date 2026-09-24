@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
+import logoUrl from "../icons/convologo.png";
 import { TrolleyIcon } from "../icons/TrolleyIcon";
 import { useCart } from "../lib/cart-context";
 import { useSiteContent } from "../lib/content-context";
@@ -24,10 +25,13 @@ export function Header() {
       </a>
       <div className="site-header__inner">
         <NavLink className="brand" to="/" onClick={() => setOpen(false)}>
-          <span className="brand__name">{content.site.name}</span>
-          {content.site.tagline ? (
-            <span className="brand__tagline">{content.site.tagline}</span>
-          ) : null}
+          <img className="brand__logo" src={logoUrl} alt="" />
+          <span className="brand__text">
+            <span className="brand__name">{content.site.name}</span>
+            {content.site.tagline ? (
+              <span className="brand__tagline">{content.site.tagline}</span>
+            ) : null}
+          </span>
         </NavLink>
         <button
           className="nav-toggle"

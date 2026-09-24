@@ -1,3 +1,12 @@
+@font-face {
+  font-family: "The Seasons";
+  src: url("/fonts/TheSeasons-Light.woff2") format("woff2"),
+    url("/fonts/TheSeasons-Light.woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --dark-background: #24277b;
   --mid-background: #89bbd7;
@@ -11,8 +20,8 @@
   --sage: #3f5b4c;
   --rule: rgba(28, 25, 22, 0.12);
   --shadow: 0 24px 50px rgba(28, 25, 22, 0.08);
-  --serif: "Fraunces", "Iowan Old Style", "Palatino Linotype", serif;
-  --sans: "Outfit", "Segoe UI", sans-serif;
+  --serif: "The Seasons", serif;
+  --sans: "Poppins", sans-serif;
   --measure: 68rem;
 }
 
@@ -90,10 +99,16 @@ h1,
 h2,
 h3 {
   font-family: var(--serif);
-  font-weight: 520;
+  font-weight: 300;
   letter-spacing: -0.03em;
   line-height: 1.12;
   margin: 0 0 0.7rem;
+}
+
+.brand__name,
+.testimonial blockquote,
+.shipping-fields legend {
+  font-weight: 300;
 }
 
 p {
@@ -154,8 +169,28 @@ p:last-child {
 .brand {
   text-decoration: none;
   display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.brand__text {
+  display: flex;
   flex-direction: column;
   gap: 0.1rem;
+  min-width: 0;
+}
+
+.brand__logo {
+  width: 3.15rem;
+  height: 3.15rem;
+  flex-shrink: 0;
+  object-fit: contain;
+  transition: opacity 0.16s ease;
+}
+
+.brand:hover .brand__logo {
+  opacity: 0.75;
 }
 
 .brand__name {
@@ -163,9 +198,10 @@ p:last-child {
   font-size: 1.2rem;
   letter-spacing: -0.03em;
   color: var(--paper);
+  transition: color 0.16s ease;
 }
 
-.brand__name:hover {
+.brand:hover .brand__name {
   color: var(--mid-background);
 }
 
@@ -190,7 +226,6 @@ p:last-child {
 
 .nav a:hover {
   color: var(--mid-background);
-  opacity: 0.85;
 }
 
 .nav a[aria-current="page"] {
@@ -332,7 +367,7 @@ p:last-child {
 .image-block,
 .gallery-section,
 .testimonial-section {
-  padding: 1.2rem 0 2.6rem;
+  padding: 1.6rem 0 3rem;
 }
 
 .image-block h2,
@@ -374,40 +409,114 @@ p:last-child {
   font-size: 0.92rem;
 }
 
-.testimonial {
-  background: white;
-  color: var(--ink);
-  border: 1px solid var(--rule);
-  box-shadow: var(--shadow);
-  padding: 1.4rem;
+.clothesline {
+  --peg-height: 4.6rem;
+  position: relative;
   display: grid;
-  gap: 0.5rem;
-  max-width: 42rem;
+  gap: 1.75rem;
+}
+
+.clothesline__measure {
+  height: 0;
+  margin-block: 0;
+  padding: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.clothesline__row {
+  position: relative;
+}
+
+.clothesline__wire {
+  /* Stroke sits at the note top (path starts ~30% down the svg). */
+  position: absolute;
+  top: calc(var(--peg-height) * 0.85 - 0.7rem);
+  left: 0;
+  width: 100%;
+  height: 2.4rem;
+  color: rgba(28, 25, 22, 0.48);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.clothesline__notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--row-cols, 1), minmax(0, 1fr));
+  gap: 1.75rem 1.4rem;
+  align-items: start;
+  justify-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.clothesline__note {
+  position: relative;
+  width: min(100%, 19rem);
+  margin: 0;
+  margin-top: var(--note-offset, 0);
+  /* Peg sits above the note; only the bottom 15% overlaps the card. */
+  padding-top: calc(var(--peg-height) * 0.85);
+  z-index: 1;
+}
+
+.clothesline__peg {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: auto;
+  height: var(--peg-height);
+  transform: translateX(-50%) rotate(var(--peg-rotate, 0deg));
+  transform-origin: 50% 70%;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(28, 25, 22, 0.22));
+}
+
+.testimonial {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  background: #fffdf7;
+  color: var(--ink);
+  border: 1px solid rgba(28, 25, 22, 0.1);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 14px 28px rgba(28, 25, 22, 0.1);
+  padding: 1.35rem 1.25rem 1.2rem;
+  display: grid;
+  gap: 0.55rem;
+  transform: rotate(var(--note-rotate, 0deg));
+  transform-origin: top center;
 }
 
 .testimonial--with-image {
-  grid-template-columns: 5.5rem 1fr;
+  grid-template-columns: 4.5rem 1fr;
   align-items: start;
 }
 
 .testimonial img {
-  width: 5.5rem;
-  height: 5.5rem;
+  width: 4.5rem;
+  height: 4.5rem;
   object-fit: cover;
-  border-radius: 50%;
+  border-radius: 0.2rem;
   background: var(--paper-deep);
 }
 
 .testimonial blockquote {
   margin: 0;
   font-family: var(--serif);
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   line-height: 1.4;
 }
 
 .testimonial figcaption {
   color: var(--ink-soft);
-  font-size: 0.92rem;
+  font-size: 0.88rem;
 }
 
 /* Contact page */
@@ -1345,5 +1454,10 @@ p:last-child {
 @media (max-width: 520px) {
   .product-grid {
     grid-template-columns: 1fr;
+  }
+
+  .brand__logo {
+    width: 2.5rem;
+    height: 2.5rem;
   }
 }
