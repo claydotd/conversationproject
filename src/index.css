@@ -103,6 +103,7 @@ h3 {
   letter-spacing: -0.03em;
   line-height: 1.12;
   margin: 0 0 0.7rem;
+  padding-bottom: 0.5rem;
 }
 
 .brand__name,
@@ -140,6 +141,7 @@ p:last-child {
   backdrop-filter: blur(16px);
   background: var(--dark-background);
   border-bottom: 1px solid var(--rule);
+  padding: 0.5rem 0;
 }
 
 .site-header a {
@@ -211,6 +213,26 @@ p:last-child {
   font-size: 0.78rem;
   line-height: 1.15;
   max-width: 18rem;
+}
+
+@media (max-width: 768px) {
+  .brand {
+    gap: 0.55rem;
+  }
+
+  .brand__logo {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .brand__name {
+    font-size: 1rem;
+  }
+
+  .brand__tagline {
+    font-size: 0.7rem;
+    max-width: 12rem;
+  }
 }
 
 /* Navigation */
@@ -346,11 +368,11 @@ p:last-child {
 }
 
 .section h2 {
-  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-size: clamp(1.95rem, 1.7rem + 0.6vw, 2.2rem);
 }
 
 .prose {
-  max-width: 42rem;
+  width: 100%;
   color: var(--ink);
 }
 
@@ -374,7 +396,7 @@ p:last-child {
 
 .image-block h2,
 .gallery-section h2 {
-  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-size: clamp(1.95rem, 1.7rem + 0.6vw, 2.2rem);
 }
 
 .image-block figure,
