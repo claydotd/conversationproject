@@ -54,14 +54,25 @@ export function isAuthenticated(req: Request): boolean {
 }
 
 export function passwordConfigured(): boolean {
-  return Boolean(getEnv("ADMIN_PASSWORD"));
+  return Boolean(
+    getEnv("ADMIN_USERNAME") &&
+      getEnv("ADMIN_PASSWORD") &&
+      getEnv("ADMIN_SESSION_SECRET"),
+  );
 }
 
-export function passwordMatches(candidate: string): boolean {
-  const expected = getEnv("ADMIN_PASSWORD");
+function safeEqual(candidate: string, expected: string | undefined): boolean {
   if (!expected) return false;
   const a = Buffer.from(candidate);
   const b = Buffer.from(expected);
   if (a.length !== b.length) return false;
   return timingSafeEqual(a, b);
+}
+
+export function usernameMatches(candidate: string): boolean {
+  return safeEqual(candidate, getEnv("ADMIN_USERNAME"));
+}
+
+export function passwordMatches(candidate: string): boolean {
+  return safeEqual(candidate, getEnv("ADMIN_PASSWORD"));
 }

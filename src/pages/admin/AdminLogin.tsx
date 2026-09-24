@@ -8,6 +8,7 @@ export function AdminLogin({
   passwordConfigured: boolean;
   onSignedIn: () => void;
 }) {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -17,7 +18,7 @@ export function AdminLogin({
     setSubmitting(true);
     setError("");
     try {
-      await loginAdmin(password);
+      await loginAdmin(username, password);
       onSignedIn();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to sign in.");
@@ -35,11 +36,21 @@ export function AdminLogin({
         </p>
         {!passwordConfigured ? (
           <p className="banner">
-            Set <code>ADMIN_PASSWORD</code> and{" "}
+            Set <code>ADMIN_USERNAME</code>, <code>ADMIN_PASSWORD</code>, and{" "}
             <code>ADMIN_SESSION_SECRET</code> in your environment before signing
             in.
           </p>
         ) : null}
+        <label>
+          Username
+          <input
+            type="text"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            autoComplete="username"
+            required
+          />
+        </label>
         <label>
           Password
           <input

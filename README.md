@@ -21,7 +21,7 @@ npm install
 npm run dev
 ```
 
-Set `ADMIN_PASSWORD` and a long random `ADMIN_SESSION_SECRET` in `.env`, then open:
+Set `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and a long random `ADMIN_SESSION_SECRET` in `.env`, then open:
 
 - Site: `http://localhost:5173`
 - Admin: `http://localhost:5173/admin`
@@ -43,8 +43,9 @@ That runs `netlify database migrations apply` against the local Netlify Database
 2. Build command: `npm run build`. Publish directory: `dist`. These are already in `netlify.toml`.
 3. Enable **Netlify Database** on the site. Migrations in `netlify/database/migrations/` are applied automatically on deploy.
 4. In **Site configuration → Environment variables**, set:
+   - `ADMIN_USERNAME`
    - `ADMIN_PASSWORD`
-   - `ADMIN_SESSION_SECRET` (long random string)
+   - `ADMIN_SESSION_SECRET` (long random string; signing key only)
    - `EVENTBRITE_API_KEY` (private token from Eventbrite → Account Settings → Developer Links → API Keys)
    - `EVENTBRITE_ORGANIZER_ID` (defaults to `114391829571` if omitted)
    - `SUMUP_API_KEY`

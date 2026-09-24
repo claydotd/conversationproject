@@ -9,6 +9,7 @@ import {
   isAuthenticated,
   passwordConfigured,
   passwordMatches,
+  usernameMatches,
 } from "../lib/auth";
 import {
   mediaKey,
@@ -54,14 +55,22 @@ function requireAuth(req: Request) {
 async function handleLogin(req: Request) {
   if (!passwordConfigured()) {
     return errorJson(
-      "Set ADMIN_PASSWORD (and ADMIN_SESSION_SECRET) in the Netlify environment before using the admin portal.",
+      "Set ADMIN_USERNAME, ADMIN_PASSWORD, and ADMIN_SESSION_SECRET in the Netlify environment before using the admin portal.",
       503,
     );
   }
 
-  const body = (await req.json()) as { password?: string };
-  if (!body.password || !passwordMatches(body.password)) {
-    return errorJson("That password is not correct.", 401);
+  const body = (await req.json()) as {
+    username?: string;
+    password?: string;
+  };
+  if (
+    !body.username ||
+    !body.password ||
+    !usernameMatches(body.username) ||
+    !passwordMatches(body.password)
+  ) {
+    return errorJson("That username or password is not correct.", 401);
   }
 
   return json(

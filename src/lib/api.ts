@@ -36,11 +36,14 @@ export async function fetchAdminSession(): Promise<{
   return response.json();
 }
 
-export async function loginAdmin(password: string): Promise<void> {
+export async function loginAdmin(
+  username: string,
+  password: string,
+): Promise<void> {
   const response = await fetch("/api/admin/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ password }),
+    body: JSON.stringify({ username, password }),
   });
   if (!response.ok) {
     throw new Error(await readError(response, "Unable to sign in."));
