@@ -12,6 +12,9 @@ const home: PageContent = {
       heading: "Conversations that change how people work together.",
       subheading:
         "We help teams and leaders speak with more clarity, honesty, and care — so the important work can actually move.",
+      imageUrl: "",
+      imageAlt: "",
+      imageDimension: "portrait",
     },
     {
       id: "home-practice",
@@ -69,6 +72,9 @@ const about: PageContent = {
       heading: "Built around the belief that talk is real work.",
       subheading:
         "The Conversation Project exists to make ambitious, kind, useful dialogue ordinary — in rooms where it is usually rare.",
+      imageUrl: "",
+      imageAlt: "",
+      imageDimension: "portrait",
     },
     {
       id: "about-story",
@@ -116,6 +122,9 @@ const contact: PageContent = {
       heading: "Tell us about the conversation you need.",
       subheading:
         "Share a little context and we will come back with availability, an outline, and a clear next step.",
+      imageUrl: "",
+      imageAlt: "",
+      imageDimension: "portrait",
     },
     {
       id: "contact-note",
@@ -159,6 +168,9 @@ const terms: PageContent = {
       heading: "Terms and conditions",
       subheading:
         "How this site works, and how we use your details if you get in touch or sign up.",
+      imageUrl: "",
+      imageAlt: "",
+      imageDimension: "portrait",
     },
     {
       id: "terms-using-the-site",
@@ -205,6 +217,9 @@ const events: PageContent = {
       heading: "Come and sit in a room with us.",
       subheading:
         "Upcoming gatherings from The Conversation Project. Booking and full details live on Eventbrite.",
+      imageUrl: "",
+      imageAlt: "",
+      imageDimension: "portrait",
     },
     {
       id: "events-intro",

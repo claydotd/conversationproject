@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatPricePounds, type Product } from "@shared/shop";
 import { Seo } from "../components/Seo";
+import { useReveal } from "../hooks/useReveal";
 import { fetchProducts } from "../lib/api";
 import { useCart } from "../lib/cart-context";
 
@@ -11,6 +12,14 @@ export function ShopPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [addedId, setAddedId] = useState("");
+  const introReveal = useReveal<HTMLElement>({
+    stagger: true,
+  });
+  const gridReveal = useReveal<HTMLUListElement>({
+    stagger: true,
+    delayMs: 75,
+    observeKey: !loading && !error && products.length > 0 ? products.length : 0,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -41,7 +50,13 @@ export function ShopPage() {
         title="Shop"
         description="Digital conversation prompts and the Conversation Project card deck."
       />
-      <section className="section shop-intro">
+      <section
+        className={["section", "shop-intro", introReveal.className]
+          .filter(Boolean)
+          .join(" ")}
+        ref={introReveal.ref}
+        style={introReveal.style}
+      >
         <h1>Shop</h1>
         <p>
           <Link className="text-link" to="/shop/cart">
@@ -61,7 +76,13 @@ export function ShopPage() {
           <p className="muted">No products are available yet.</p>
         ) : null}
         {!loading && !error && products.length > 0 ? (
-          <ul className="product-grid">
+          <ul
+            className={["product-grid", gridReveal.className]
+              .filter(Boolean)
+              .join(" ")}
+            ref={gridReveal.ref}
+            style={gridReveal.style}
+          >
             {products.map((product) => (
               <li key={product.id} className="product-card">
                 {product.imageUrl ? (

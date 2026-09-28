@@ -31,6 +31,20 @@ export type PermanentSectionType = (typeof PERMANENT_SECTION_TYPES)[number];
 export const TEXT_ALIGNS = ["left", "center", "right"] as const;
 export type TextAlign = (typeof TEXT_ALIGNS)[number];
 
+export const IMAGE_SIZES = ["small", "medium", "large"] as const;
+export type ImageSize = (typeof IMAGE_SIZES)[number];
+
+export const IMAGE_DIMENSIONS = [
+  "square",
+  "landscape",
+  "portrait",
+  "uncropped",
+] as const;
+export type ImageDimension = (typeof IMAGE_DIMENSIONS)[number];
+
+export const COMBINE_SIDES = ["left", "right"] as const;
+export type CombineSide = (typeof COMBINE_SIDES)[number];
+
 export const SECTION_BACKGROUNDS = [
   "default",
   "dark-background",
@@ -74,6 +88,9 @@ export interface HeroSection extends PageSectionBase {
   eyebrow: string;
   heading: string;
   subheading: string;
+  imageUrl: string;
+  imageAlt: string;
+  imageDimension: ImageDimension;
 }
 
 export interface TextSection extends PageSectionBase {
@@ -98,6 +115,10 @@ export interface ImageSection extends PageSectionBase {
   imageUrl: string;
   alt: string;
   caption: string;
+  size: ImageSize;
+  dimension: ImageDimension;
+  combineWithAbove: boolean;
+  combineSide: CombineSide;
 }
 
 export interface GalleryImage {

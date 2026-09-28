@@ -1,17 +1,28 @@
 import type { Dispatch, SetStateAction } from "react";
+import { useRef } from "react";
 import {
+  COMBINE_SIDE_LABELS,
   createGalleryImage,
   createPageSection,
+  IMAGE_DIMENSION_LABELS,
+  IMAGE_SIZE_LABELS,
   isPermanentSectionType,
   SECTION_BACKGROUND_LABELS,
   SECTION_TYPE_LABELS,
   TEXT_ALIGN_LABELS,
 } from "@shared/page-sections";
+import { wrapInlineMarkdown, type InlineMark } from "@shared/inline-markdown";
 import {
   ADDABLE_SECTION_TYPES,
+  COMBINE_SIDES,
+  IMAGE_DIMENSIONS,
+  IMAGE_SIZES,
   SECTION_BACKGROUNDS,
   TEXT_ALIGNS,
+  type CombineSide,
   type GalleryImage,
+  type ImageDimension,
+  type ImageSize,
   type PageSection,
   type PageSlug,
   type SectionBackground,
@@ -283,6 +294,108 @@ function AlignPicker({
   );
 }
 
+function OptionPicker<T extends string>({
+  label,
+  value,
+  options,
+  labels,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: readonly T[];
+  labels: Record<T, string>;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <fieldset className="align-picker">
+      <legend>{label}</legend>
+      <div className="align-picker__options" role="radiogroup" aria-label={label}>
+        {options.map((option) => {
+          const selected = option === value;
+          return (
+            <button
+              key={option}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              className={`align-option${selected ? " is-selected" : ""}`}
+              onClick={() => onChange(option)}
+            >
+              {labels[option]}
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
+function RichTextBodyField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  function applyMark(mark: InlineMark) {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const next = wrapInlineMarkdown(value, start, end, mark);
+    onChange(next.value);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(next.selectionStart, next.selectionEnd);
+    });
+  }
+
+  return (
+    <div className="rich-text-field">
+      <div className="rich-text-toolbar" role="toolbar" aria-label="Text style">
+        <button
+          type="button"
+          className="ghost rich-text-toolbar__btn"
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => applyMark("bold")}
+        >
+          <strong>B</strong>
+        </button>
+        <button
+          type="button"
+          className="ghost rich-text-toolbar__btn"
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => applyMark("italic")}
+        >
+          <em>I</em>
+        </button>
+        <button
+          type="button"
+          className="ghost rich-text-toolbar__btn"
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => applyMark("underline")}
+        >
+          <span className="rich-text-toolbar__underline">U</span>
+        </button>
+      </div>
+      <label>
+        Paragraph
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      </label>
+      <p className="muted rich-text-hint">
+        Select text, then use the buttons for bold, italic, or underline.
+      </p>
+    </div>
+  );
+}
+
 function SectionFields({
   section,
   onChange,
@@ -355,6 +468,72 @@ function SectionFields({
             }
           />
         </label>
+        <label>
+          Image (optional)
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={(event) =>
+              void onUpload(event.target.files?.[0], (url) =>
+                onChange((current) =>
+                  current.type === "hero"
+                    ? { ...current, imageUrl: url }
+                    : current,
+                ),
+              )
+            }
+          />
+        </label>
+        {section.imageUrl ? (
+          <img
+            className="preview-image preview-image--wide"
+            src={section.imageUrl}
+            alt=""
+          />
+        ) : null}
+        <label>
+          Image alt text
+          <input
+            value={section.imageAlt}
+            onChange={(event) =>
+              onChange((current) =>
+                current.type === "hero"
+                  ? { ...current, imageAlt: event.target.value }
+                  : current,
+              )
+            }
+          />
+        </label>
+        {section.imageUrl ? (
+          <OptionPicker
+            label="Image dimensions"
+            value={section.imageDimension}
+            options={IMAGE_DIMENSIONS}
+            labels={IMAGE_DIMENSION_LABELS}
+            onChange={(imageDimension: ImageDimension) =>
+              onChange((current) =>
+                current.type === "hero"
+                  ? { ...current, imageDimension }
+                  : current,
+              )
+            }
+          />
+        ) : null}
+        {section.imageUrl ? (
+          <button
+            className="ghost"
+            type="button"
+            onClick={() =>
+              onChange((current) =>
+                current.type === "hero"
+                  ? { ...current, imageUrl: "", imageAlt: "" }
+                  : current,
+              )
+            }
+          >
+            Remove image
+          </button>
+        ) : null}
       </>
     );
   }
@@ -384,19 +563,14 @@ function SectionFields({
             )
           }
         />
-        <label>
-          Paragraph
-          <textarea
-            value={section.body}
-            onChange={(event) =>
-              onChange((current) =>
-                current.type === "text"
-                  ? { ...current, body: event.target.value }
-                  : current,
-              )
-            }
-          />
-        </label>
+        <RichTextBodyField
+          value={section.body}
+          onChange={(body) =>
+            onChange((current) =>
+              current.type === "text" ? { ...current, body } : current,
+            )
+          }
+        />
         <AlignPicker
           label="Paragraph alignment"
           value={section.bodyAlign}
@@ -471,6 +645,57 @@ function SectionFields({
             }
           />
         </label>
+        <OptionPicker
+          label="Image size"
+          value={section.size}
+          options={IMAGE_SIZES}
+          labels={IMAGE_SIZE_LABELS}
+          onChange={(size: ImageSize) =>
+            onChange((current) =>
+              current.type === "image" ? { ...current, size } : current,
+            )
+          }
+        />
+        <OptionPicker
+          label="Image dimensions"
+          value={section.dimension}
+          options={IMAGE_DIMENSIONS}
+          labels={IMAGE_DIMENSION_LABELS}
+          onChange={(dimension: ImageDimension) =>
+            onChange((current) =>
+              current.type === "image" ? { ...current, dimension } : current,
+            )
+          }
+        />
+        <label className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={section.combineWithAbove}
+            onChange={(event) =>
+              onChange((current) =>
+                current.type === "image"
+                  ? { ...current, combineWithAbove: event.target.checked }
+                  : current,
+              )
+            }
+          />
+          Combine with section above
+        </label>
+        {section.combineWithAbove ? (
+          <OptionPicker
+            label="Image position"
+            value={section.combineSide}
+            options={COMBINE_SIDES}
+            labels={COMBINE_SIDE_LABELS}
+            onChange={(combineSide: CombineSide) =>
+              onChange((current) =>
+                current.type === "image"
+                  ? { ...current, combineSide }
+                  : current,
+              )
+            }
+          />
+        ) : null}
         {section.imageUrl ? (
           <button
             className="ghost"

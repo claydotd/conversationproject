@@ -7,6 +7,7 @@ import {
 } from "@shared/events";
 import type { SectionBackground } from "@shared/types";
 import { sectionSurfaceClass } from "@shared/page-sections";
+import { useReveal } from "../hooks/useReveal";
 import { fetchEvents } from "../lib/api";
 
 function EventCard({ event }: { event: SiteEvent }) {
@@ -40,13 +41,21 @@ function EventCard({ event }: { event: SiteEvent }) {
 
 export function EventList({
   background = "default",
+  revealDelayMs = 0,
 }: {
   background?: SectionBackground;
+  revealDelayMs?: number;
 }) {
   const [listing, setListing] = useState<EventsListing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const surface = sectionSurfaceClass(background);
+  const events = listing?.events ?? [];
+  const reveal = useReveal<HTMLDivElement>({
+    delayMs: revealDelayMs,
+    stagger: true,
+    observeKey: !loading && !error && events.length > 0 ? events.length : 0,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -71,27 +80,33 @@ export function EventList({
     };
   }, []);
 
-  const events = listing?.events ?? [];
-
   return (
     <section
-      className={["section", "page", "events-section", surface]
+      className={["section", "events-section", surface]
         .filter(Boolean)
         .join(" ")}
     >
-      <div aria-live="polite">
-        {loading ? <p className="muted">Loading events…</p> : null}
-        {!loading && error ? <p className="muted">{error}</p> : null}
-        {!loading && !error && events.length === 0 ? (
-          <p className="muted">No upcoming events</p>
-        ) : null}
-        {!loading && !error && events.length > 0 ? (
-          <div className="event-grid">
-            {events.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
-        ) : null}
+      <div className="page">
+        <div aria-live="polite">
+          {loading ? <p className="muted">Loading events…</p> : null}
+          {!loading && error ? <p className="muted">{error}</p> : null}
+          {!loading && !error && events.length === 0 ? (
+            <p className="muted">No upcoming events</p>
+          ) : null}
+          {!loading && !error && events.length > 0 ? (
+            <div
+              className={["event-grid", reveal.className]
+                .filter(Boolean)
+                .join(" ")}
+              ref={reveal.ref}
+              style={reveal.style}
+            >
+              {events.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+          ) : null}
+        </div>
       </div>
     </section>
   );

@@ -6,6 +6,7 @@ import {
 } from "react";
 import { sectionSurfaceClass } from "@shared/page-sections";
 import type { TestimonialSection as TestimonialContent } from "@shared/types";
+import { useReveal } from "../hooks/useReveal";
 import clothespegUrl from "../icons/clothespeg.png";
 
 const NOTE_ROTATIONS = [-2.6, 1.8, -1.3, 2.4, -0.9, 1.5];
@@ -93,12 +94,17 @@ function TestimonialNote({
 
 export function TestimonialsClothesline({
   items,
+  revealDelayMs = 0,
 }: {
   items: TestimonialContent[];
+  revealDelayMs?: number;
 }) {
   const visible = items.filter((item) => item.quote || item.authorName);
   const measureRef = useRef<HTMLDivElement>(null);
   const [columns, setColumns] = useState(1);
+  const reveal = useReveal<HTMLElement>({
+    delayMs: revealDelayMs,
+  });
 
   useLayoutEffect(() => {
     const el = measureRef.current;
@@ -132,9 +138,15 @@ export function TestimonialsClothesline({
 
   return (
     <section
-      className={["testimonial-section", sectionSurfaceClass(background)]
+      className={[
+        "testimonial-section",
+        sectionSurfaceClass(background),
+        reveal.className,
+      ]
         .filter(Boolean)
         .join(" ")}
+      ref={reveal.ref}
+      style={reveal.style}
     >
       <div className="clothesline">
         <div

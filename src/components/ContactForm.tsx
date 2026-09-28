@@ -1,17 +1,24 @@
 import { FormEvent, useState } from "react";
 import type { SectionBackground } from "@shared/types";
 import { sectionSurfaceClass } from "@shared/page-sections";
+import { useReveal } from "../hooks/useReveal";
 import { encodeForm } from "../lib/api";
 import { useSiteContent } from "../lib/content-context";
 
 export function ContactForm({
   background = "default",
+  revealDelayMs = 0,
 }: {
   background?: SectionBackground;
+  revealDelayMs?: number;
 }) {
   const { content } = useSiteContent();
   const [status, setStatus] = useState("");
   const surface = sectionSurfaceClass(background);
+  const reveal = useReveal<HTMLDivElement>({
+    delayMs: revealDelayMs,
+    stagger: true,
+  });
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -42,58 +49,66 @@ export function ContactForm({
   }
 
   return (
-    <section className={["section", "page", surface].filter(Boolean).join(" ")}>
-      <div className="contact-layout">
-        <div className="form-card">
-          <h2>Send a message</h2>
-          <form className="form" name="contact" onSubmit={onSubmit}>
-            <input type="hidden" name="form-name" value="contact" />
-            <p hidden>
+    <section className={["section", surface].filter(Boolean).join(" ")}>
+      <div className="page">
+        <div
+          className={["contact-layout", reveal.className]
+            .filter(Boolean)
+            .join(" ")}
+          ref={reveal.ref}
+          style={reveal.style}
+        >
+          <div className="form-card">
+            <h2>Send a message</h2>
+            <form className="form" name="contact" onSubmit={onSubmit}>
+              <input type="hidden" name="form-name" value="contact" />
+              <p hidden>
+                <label>
+                  Don’t fill this in: <input name="bot-field" />
+                </label>
+              </p>
               <label>
-                Don’t fill this in: <input name="bot-field" />
+                Name
+                <input name="name" required autoComplete="name" />
               </label>
-            </p>
-            <label>
-              Name
-              <input name="name" required autoComplete="name" />
-            </label>
-            <label>
-              Email
-              <input name="email" type="email" required autoComplete="email" />
-            </label>
-            <label>
-              Message
-              <textarea name="message" required />
-            </label>
-            <button type="submit">Send</button>
-            <p className="form-status" role="status">
-              {status}
-            </p>
-          </form>
-        </div>
-        <aside className="contact-card">
-          <h2>Direct</h2>
-          <div className="contact-meta">
-            {content.site.contactEmail ? (
-              <a href={`mailto:${content.site.contactEmail}`}>
-                {content.site.contactEmail}
-              </a>
-            ) : null}
-            {content.site.contactPhone ? (
-              <a href={`tel:${content.site.contactPhone}`}>
-                {content.site.contactPhone}
-              </a>
-            ) : null}
-            {content.site.contactAddress ? (
-              <p>{content.site.contactAddress}</p>
-            ) : null}
-            {content.site.social.map((item) => (
-              <a key={item.url} href={item.url}>
-                {item.label}
-              </a>
-            ))}
+              <label>
+                Email
+                <input name="email" type="email" required autoComplete="email" />
+              </label>
+              <label>
+                Message
+                <textarea name="message" required />
+              </label>
+              <button type="submit">Send</button>
+              <p className="form-status" role="status">
+                {status}
+              </p>
+            </form>
           </div>
-        </aside>
+          <aside className="contact-card">
+            <h2>Direct</h2>
+            <div className="contact-meta">
+              {content.site.contactEmail ? (
+                <a href={`mailto:${content.site.contactEmail}`}>
+                  {content.site.contactEmail}
+                </a>
+              ) : null}
+              {content.site.contactPhone ? (
+                <a href={`tel:${content.site.contactPhone}`}>
+                  {content.site.contactPhone}
+                </a>
+              ) : null}
+              {content.site.contactAddress ? (
+                <p>{content.site.contactAddress}</p>
+              ) : null}
+              {content.site.social.map((item) => (
+                <a key={item.url} href={item.url}>
+                  {item.label}
+                </a>
+              ))}
+            </div>
+          </aside>
+        </div>
       </div>
     </section>
   );

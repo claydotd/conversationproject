@@ -1,6 +1,12 @@
 import {
+  COMBINE_SIDES,
+  IMAGE_DIMENSIONS,
+  IMAGE_SIZES,
   SECTION_BACKGROUNDS,
+  type CombineSide,
   type GalleryImage,
+  type ImageDimension,
+  type ImageSize,
   type PageSection,
   type PermanentSectionType,
   type SectionBackground,
@@ -21,6 +27,24 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
 export const TEXT_ALIGN_LABELS: Record<TextAlign, string> = {
   left: "Left",
   center: "Center",
+  right: "Right",
+};
+
+export const IMAGE_SIZE_LABELS: Record<ImageSize, string> = {
+  small: "Small",
+  medium: "Medium",
+  large: "Large",
+};
+
+export const IMAGE_DIMENSION_LABELS: Record<ImageDimension, string> = {
+  square: "Square",
+  landscape: "Landscape",
+  portrait: "Portrait",
+  uncropped: "Uncropped",
+};
+
+export const COMBINE_SIDE_LABELS: Record<CombineSide, string> = {
+  left: "Left",
   right: "Right",
 };
 
@@ -59,6 +83,27 @@ export function isTextAlign(value: unknown): value is TextAlign {
   return value === "left" || value === "center" || value === "right";
 }
 
+export function isImageSize(value: unknown): value is ImageSize {
+  return (
+    typeof value === "string" &&
+    (IMAGE_SIZES as readonly string[]).includes(value)
+  );
+}
+
+export function isImageDimension(value: unknown): value is ImageDimension {
+  return (
+    typeof value === "string" &&
+    (IMAGE_DIMENSIONS as readonly string[]).includes(value)
+  );
+}
+
+export function isCombineSide(value: unknown): value is CombineSide {
+  return (
+    typeof value === "string" &&
+    (COMBINE_SIDES as readonly string[]).includes(value)
+  );
+}
+
 export function isSectionBackground(
   value: unknown,
 ): value is SectionBackground {
@@ -95,7 +140,17 @@ export function createPageSection(type: SectionType): PageSection {
   const background: SectionBackground = "default";
   switch (type) {
     case "hero":
-      return { id, type, background, eyebrow: "", heading: "", subheading: "" };
+      return {
+        id,
+        type,
+        background,
+        eyebrow: "",
+        heading: "",
+        subheading: "",
+        imageUrl: "",
+        imageAlt: "",
+        imageDimension: "portrait",
+      };
     case "text":
       return {
         id,
@@ -115,6 +170,10 @@ export function createPageSection(type: SectionType): PageSection {
         imageUrl: "",
         alt: "",
         caption: "",
+        size: "large",
+        dimension: "uncropped",
+        combineWithAbove: false,
+        combineSide: "right",
       };
     case "gallery":
       return { id, type, background, heading: "", images: [] };

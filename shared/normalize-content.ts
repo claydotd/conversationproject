@@ -1,8 +1,18 @@
-import { createSectionId, isSectionBackground, isTextAlign } from "./page-sections";
+import {
+  createSectionId,
+  isCombineSide,
+  isImageDimension,
+  isImageSize,
+  isSectionBackground,
+  isTextAlign,
+} from "./page-sections";
 import { defaultContent } from "./default-content";
 import {
   PAGE_SLUGS,
+  type CombineSide,
   type GalleryImage,
+  type ImageDimension,
+  type ImageSize,
   type PageContent,
   type PageSection,
   type PageSlug,
@@ -52,6 +62,18 @@ function normalizeTextAlign(value: unknown): TextAlign {
   return isTextAlign(value) ? value : "left";
 }
 
+function normalizeImageSize(value: unknown): ImageSize {
+  return isImageSize(value) ? value : "large";
+}
+
+function normalizeImageDimension(value: unknown): ImageDimension {
+  return isImageDimension(value) ? value : "uncropped";
+}
+
+function normalizeCombineSide(value: unknown): CombineSide {
+  return isCombineSide(value) ? value : "right";
+}
+
 function normalizeGalleryImage(value: unknown): GalleryImage | null {
   const item = asRecord(value);
   if (!item) return null;
@@ -80,6 +102,11 @@ function normalizeSection(value: unknown): PageSection | null {
       eyebrow: asString(item.eyebrow),
       heading: asString(item.heading),
       subheading: asString(item.subheading),
+      imageUrl: asString(item.imageUrl),
+      imageAlt: asString(item.imageAlt),
+      imageDimension: normalizeImageDimension(
+        item.imageDimension ?? "portrait",
+      ),
     };
   }
 
@@ -104,6 +131,10 @@ function normalizeSection(value: unknown): PageSection | null {
       imageUrl: asString(item.imageUrl),
       alt: asString(item.alt),
       caption: asString(item.caption),
+      size: normalizeImageSize(item.size),
+      dimension: normalizeImageDimension(item.dimension),
+      combineWithAbove: Boolean(item.combineWithAbove),
+      combineSide: normalizeCombineSide(item.combineSide),
     };
   }
 
@@ -245,6 +276,9 @@ function normalizePage(
       eyebrow: title,
       heading,
       subheading,
+      imageUrl: "",
+      imageAlt: "",
+      imageDimension: "portrait",
     });
   }
 
