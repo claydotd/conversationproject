@@ -154,8 +154,8 @@ export function PageEditor({
         </div>
         {page.sections.length === 0 ? (
           <p className="muted">
-            No sections yet. Add text, an image, a gallery, a testimonial, or a
-            hero.
+            No sections yet. Add text, an image, a gallery, a testimonial, social
+            links, or a hero.
           </p>
         ) : null}
         {page.sections.map((section, index) => {
@@ -423,6 +423,41 @@ function SectionFields({
         This block shows the contact form and direct details. Move it up or down
         to place other sections before or after it.
       </p>
+    );
+  }
+
+  if (section.type === "social-links") {
+    return (
+      <>
+        <p className="muted permanent-note">
+          This block shows the social media links from Site settings as buttons.
+          Edit those links under Site settings.
+        </p>
+        <label>
+          Heading (optional)
+          <input
+            value={section.heading}
+            onChange={(event) =>
+              onChange((current) =>
+                current.type === "social-links"
+                  ? { ...current, heading: event.target.value }
+                  : current,
+              )
+            }
+          />
+        </label>
+        <AlignPicker
+          label="Heading alignment"
+          value={section.headingAlign}
+          onChange={(headingAlign) =>
+            onChange((current) =>
+              current.type === "social-links"
+                ? { ...current, headingAlign }
+                : current,
+            )
+          }
+        />
+      </>
     );
   }
 

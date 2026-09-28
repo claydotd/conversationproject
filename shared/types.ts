@@ -1,3 +1,5 @@
+import type { SocialPlatform } from "./social";
+
 export const PAGE_SLUGS = ["home", "about", "events", "contact", "terms"] as const;
 export type PageSlug = (typeof PAGE_SLUGS)[number];
 
@@ -7,6 +9,7 @@ export const SECTION_TYPES = [
   "image",
   "gallery",
   "testimonial",
+  "social-links",
   "events-list",
   "contact-form",
 ] as const;
@@ -19,6 +22,7 @@ export const ADDABLE_SECTION_TYPES = [
   "image",
   "gallery",
   "testimonial",
+  "social-links",
 ] as const;
 export type AddableSectionType = (typeof ADDABLE_SECTION_TYPES)[number];
 
@@ -66,6 +70,7 @@ interface PageSectionBase {
 }
 
 export interface SocialLink {
+  platform: SocialPlatform;
   label: string;
   url: string;
 }
@@ -109,6 +114,12 @@ export interface ContactFormSection extends PageSectionBase {
   type: "contact-form";
 }
 
+export interface SocialLinksSection extends PageSectionBase {
+  type: "social-links";
+  heading: string;
+  headingAlign: TextAlign;
+}
+
 export interface ImageSection extends PageSectionBase {
   type: "image";
   heading: string;
@@ -148,6 +159,7 @@ export type PageSection =
   | ImageSection
   | GallerySection
   | TestimonialSection
+  | SocialLinksSection
   | EventsListSection
   | ContactFormSection;
 

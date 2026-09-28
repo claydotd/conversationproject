@@ -21,6 +21,7 @@ import { loadContentFromDatabase, saveContentToDatabase } from "../lib/content";
 import { errorJson, json } from "../lib/http";
 import {
   createProduct,
+  deleteProduct,
   listAllProducts,
   updateProduct,
 } from "../lib/products";
@@ -237,6 +238,20 @@ async function handleUpdateProduct(req: Request, id: string) {
   }
 }
 
+async function handleDeleteProduct(id: string) {
+  const result = await deleteProduct(id);
+  if (!result.ok) {
+    if (result.reason === "not_found") {
+      return errorJson("Product not found.", 404);
+    }
+    return errorJson(
+      "This product appears in past orders and can't be deleted. Unpublish it instead.",
+      409,
+    );
+  }
+  return json({ ok: true });
+}
+
 async function handleProductFileUpload(req: Request) {
   const form = await req.formData();
   const file = form.get("file");
@@ -295,6 +310,13 @@ export default async (req: Request, _context: Context) => {
       );
       if (!id) return errorJson("Missing product id.");
       return await handleUpdateProduct(req, id);
+    }
+    if (pathname.startsWith("/api/admin/products/") && req.method === "DELETE") {
+      const id = decodeURIComponent(
+        pathname.replace("/api/admin/products/", ""),
+      );
+      if (!id) return errorJson("Missing product id.");
+      return await handleDeleteProduct(id);
     }
     if (pathname === "/api/admin/product-files" && req.method === "POST") {
       return await handleProductFileUpload(req);

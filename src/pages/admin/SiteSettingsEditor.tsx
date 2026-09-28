@@ -1,5 +1,18 @@
 import type { Dispatch, SetStateAction } from "react";
+import {
+  SOCIAL_PLATFORM_LABELS,
+  SOCIAL_PLATFORMS,
+  type SocialPlatform,
+} from "@shared/social";
 import type { SiteContent, SocialLink } from "@shared/types";
+
+function createEmptySocialLink(): SocialLink {
+  return {
+    platform: "instagram",
+    label: SOCIAL_PLATFORM_LABELS.instagram,
+    url: "",
+  };
+}
 
 export function SiteSettingsEditor({
   content,
@@ -27,6 +40,14 @@ export function SiteSettingsEditor({
         ),
       },
     }));
+  }
+
+  function setSocialPlatform(index: number, platform: SocialPlatform) {
+    updateSocial(index, {
+      platform,
+      label:
+        platform === "other" ? "" : SOCIAL_PLATFORM_LABELS[platform],
+    });
   }
 
   return (
@@ -124,27 +145,49 @@ export function SiteSettingsEditor({
             className="ghost"
             type="button"
             onClick={() =>
-              update("social", [...site.social, { label: "", url: "" }])
+              update("social", [...site.social, createEmptySocialLink()])
             }
           >
             Add link
           </button>
         </div>
         {site.social.map((item, index) => (
-          <div className="card" key={`${item.label}-${index}`}>
+          <div className="card" key={`${item.platform}-${item.url}-${index}`}>
             <label>
-              Label
-              <input
-                value={item.label}
+              Platform
+              <select
+                value={item.platform}
                 onChange={(event) =>
-                  updateSocial(index, { label: event.target.value })
+                  setSocialPlatform(
+                    index,
+                    event.target.value as SocialPlatform,
+                  )
                 }
-              />
+              >
+                {SOCIAL_PLATFORMS.map((platform) => (
+                  <option key={platform} value={platform}>
+                    {SOCIAL_PLATFORM_LABELS[platform]}
+                  </option>
+                ))}
+              </select>
             </label>
+            {item.platform === "other" ? (
+              <label>
+                Platform name
+                <input
+                  value={item.label}
+                  placeholder="e.g. Mastodon"
+                  onChange={(event) =>
+                    updateSocial(index, { label: event.target.value })
+                  }
+                />
+              </label>
+            ) : null}
             <label>
               URL
               <input
                 value={item.url}
+                placeholder="https://"
                 onChange={(event) =>
                   updateSocial(index, { url: event.target.value })
                 }

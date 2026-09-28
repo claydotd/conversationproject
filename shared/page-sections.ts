@@ -20,6 +20,7 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   image: "Image block",
   gallery: "Image gallery",
   testimonial: "Testimonial",
+  "social-links": "Social links",
   "events-list": "Events list",
   "contact-form": "Contact form",
 };
@@ -186,6 +187,14 @@ export function createPageSection(type: SectionType): PageSection {
         authorName: "",
         authorRole: "",
         imageUrl: "",
+      };
+    case "social-links":
+      return {
+        id,
+        type,
+        background,
+        heading: "",
+        headingAlign: "center",
       };
     case "events-list":
       return { id, type, background };

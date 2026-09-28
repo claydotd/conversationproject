@@ -7,6 +7,7 @@ import {
 } from "@shared/shop";
 import {
   createAdminProduct,
+  deleteAdminProduct,
   fetchAdminProducts,
   updateAdminProduct,
   uploadAdminImage,
@@ -89,6 +90,7 @@ export function ProductsEditor() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -145,6 +147,28 @@ export function ProductsEditor() {
       setStatus(error instanceof Error ? error.message : "Save failed.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function onDelete(product: Product) {
+    const confirmed = window.confirm(
+      `Delete “${product.name}”? This cannot be undone.`,
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setStatus("");
+    try {
+      await deleteAdminProduct(product.id);
+      if (draft.id === product.id) {
+        setDraft(toDraft());
+      }
+      setStatus("Product deleted.");
+      await reload();
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Delete failed.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -211,13 +235,23 @@ export function ProductsEditor() {
                     {product.published ? "" : " · unpublished"}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={() => startEdit(product)}
-                >
-                  Edit
-                </button>
+                <div className="inline-actions">
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => startEdit(product)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="danger"
+                    disabled={deleting}
+                    onClick={() => void onDelete(product)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -404,9 +438,24 @@ export function ProductsEditor() {
           </div>
         ) : null}
 
-        <button type="submit" disabled={saving || uploading || uploadingImage}>
-          {saving ? "Saving…" : draft.id ? "Update product" : "Create product"}
-        </button>
+        <div className="inline-actions">
+          <button type="submit" disabled={saving || uploading || uploadingImage}>
+            {saving ? "Saving…" : draft.id ? "Update product" : "Create product"}
+          </button>
+          {draft.id ? (
+            <button
+              type="button"
+              className="danger"
+              disabled={saving || deleting || uploading || uploadingImage}
+              onClick={() => {
+                const product = products.find((item) => item.id === draft.id);
+                if (product) void onDelete(product);
+              }}
+            >
+              {deleting ? "Deleting…" : "Delete product"}
+            </button>
+          ) : null}
+        </div>
       </form>
     </div>
   );

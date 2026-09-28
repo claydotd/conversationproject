@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import type { SectionBackground } from "@shared/types";
+import { socialLinkDisplayLabel } from "@shared/social";
 import { sectionSurfaceClass } from "@shared/page-sections";
 import { useReveal } from "../hooks/useReveal";
 import { encodeForm } from "../lib/api";
@@ -101,11 +102,13 @@ export function ContactForm({
               {content.site.contactAddress ? (
                 <p>{content.site.contactAddress}</p>
               ) : null}
-              {content.site.social.map((item) => (
-                <a key={item.url} href={item.url}>
-                  {item.label}
-                </a>
-              ))}
+              {content.site.social
+                .filter((item) => item.url.trim())
+                .map((item) => (
+                  <a key={`${item.platform}-${item.url}`} href={item.url}>
+                    {socialLinkDisplayLabel(item)}
+                  </a>
+                ))}
             </div>
           </aside>
         </div>

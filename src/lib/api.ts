@@ -152,6 +152,16 @@ export async function updateAdminProduct(
   return payload.product;
 }
 
+export async function deleteAdminProduct(id: string): Promise<void> {
+  const response = await fetch(
+    `/api/admin/products/${encodeURIComponent(id)}`,
+    { method: "DELETE" },
+  );
+  if (!response.ok) {
+    throw new Error(await readError(response, "Unable to delete product."));
+  }
+}
+
 export async function uploadAdminProductFile(file: File): Promise<string> {
   const body = new FormData();
   body.append("file", file);

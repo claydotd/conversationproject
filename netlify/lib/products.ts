@@ -136,3 +136,25 @@ export async function updateProduct(
   const row = rows[0] as ProductRow | undefined;
   return row ? mapProduct(row) : null;
 }
+
+export type DeleteProductResult =
+  | { ok: true }
+  | { ok: false; reason: "not_found" | "has_orders" };
+
+export async function deleteProduct(id: string): Promise<DeleteProductResult> {
+  const db = getDb();
+  const orderRows = await db.sql`
+    SELECT 1 FROM order_items WHERE product_id = ${id} LIMIT 1
+  `;
+  if (orderRows.length > 0) {
+    return { ok: false, reason: "has_orders" };
+  }
+
+  const rows = await db.sql`
+    DELETE FROM products WHERE id = ${id} RETURNING id
+  `;
+  if (rows.length === 0) {
+    return { ok: false, reason: "not_found" };
+  }
+  return { ok: true };
+}

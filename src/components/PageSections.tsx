@@ -12,6 +12,7 @@ import { revealDelayForIndex, useReveal } from "../hooks/useReveal";
 import { ContactForm } from "./ContactForm";
 import { EventList } from "./EventList";
 import { PageHero } from "./PageHero";
+import { SocialLinks } from "./SocialLinks";
 import { TestimonialsClothesline } from "./TestimonialSection";
 
 type SectionCluster =
@@ -500,6 +501,15 @@ function SectionView({
     case "contact-form":
       return (
         <ContactForm
+          background={section.background}
+          revealDelayMs={revealDelayMs}
+        />
+      );
+    case "social-links":
+      return (
+        <SocialLinks
+          heading={section.heading}
+          headingAlign={section.headingAlign}
           background={section.background}
           revealDelayMs={revealDelayMs}
         />

@@ -8,6 +8,12 @@ import {
 } from "./page-sections";
 import { defaultContent } from "./default-content";
 import {
+  inferSocialPlatform,
+  isSocialPlatform,
+  SOCIAL_PLATFORM_LABELS,
+  type SocialPlatform,
+} from "./social";
+import {
   PAGE_SLUGS,
   type CombineSide,
   type GalleryImage,
@@ -19,6 +25,7 @@ import {
   type SectionBackground,
   type SiteContent,
   type SiteSettings,
+  type SocialLink,
   type Testimonial,
   type TextAlign,
 } from "./types";
@@ -72,6 +79,27 @@ function normalizeImageDimension(value: unknown): ImageDimension {
 
 function normalizeCombineSide(value: unknown): CombineSide {
   return isCombineSide(value) ? value : "right";
+}
+
+function normalizeSocialLink(value: unknown): SocialLink | null {
+  const item = asRecord(value);
+  if (!item) return null;
+  const url = asString(item.url);
+  const label = asString(item.label);
+  if (!url && !label && !item.platform) return null;
+
+  const platform: SocialPlatform = isSocialPlatform(item.platform)
+    ? item.platform
+    : inferSocialPlatform(label, url);
+
+  return {
+    platform,
+    label:
+      platform === "other"
+        ? label
+        : label || SOCIAL_PLATFORM_LABELS[platform],
+    url,
+  };
 }
 
 function normalizeGalleryImage(value: unknown): GalleryImage | null {
@@ -162,6 +190,16 @@ function normalizeSection(value: unknown): PageSection | null {
       authorName: asString(item.authorName),
       authorRole: asString(item.authorRole),
       imageUrl: asString(item.imageUrl),
+    };
+  }
+
+  if (type === "social-links") {
+    return {
+      id,
+      type: "social-links",
+      background,
+      heading: asString(item.heading),
+      headingAlign: normalizeTextAlign(item.headingAlign ?? "center"),
     };
   }
 
@@ -346,7 +384,11 @@ export function normalizeSiteContent(
         typeof raw?.site?.newsletterConsentLabel === "string"
           ? raw.site.newsletterConsentLabel
           : defaultContent.site.newsletterConsentLabel,
-      social: Array.isArray(raw?.site?.social) ? raw.site.social : [],
+      social: Array.isArray(raw?.site?.social)
+        ? raw.site.social
+            .map(normalizeSocialLink)
+            .filter((item): item is SocialLink => item !== null)
+        : [],
     },
     pages,
     testimonials: testimonialsFromPages(pages),
