@@ -5,7 +5,9 @@ export function ScrollToTop() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // "instant" bypasses CSS `scroll-behavior: smooth` so route changes
+    // always snap to top instead of starting a scroll that can be interrupted.
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [pathname]);
 
   return null;

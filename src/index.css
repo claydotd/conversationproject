@@ -1005,7 +1005,7 @@ p:last-child {
   padding: 0.75rem 1.15rem;
   border: 1px solid var(--rule);
   border-radius: var(--radius-button);
-  background: var(--ink);
+  background: var(--dark-background);
   color: var(--paper);
   text-decoration: none;
   font-size: 0.95rem;
