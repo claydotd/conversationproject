@@ -4,6 +4,7 @@ import {
   COMBINE_SIDE_LABELS,
   createGalleryImage,
   createPageSection,
+  HERO_LINK_MODE_LABELS,
   IMAGE_DIMENSION_LABELS,
   IMAGE_SIZE_LABELS,
   isPermanentSectionType,
@@ -15,12 +16,14 @@ import { wrapInlineMarkdown, type InlineMark } from "@shared/inline-markdown";
 import {
   ADDABLE_SECTION_TYPES,
   COMBINE_SIDES,
+  HERO_LINK_MODES,
   IMAGE_DIMENSIONS,
   IMAGE_SIZES,
   SECTION_BACKGROUNDS,
   TEXT_ALIGNS,
   type CombineSide,
   type GalleryImage,
+  type HeroLinkMode,
   type ImageDimension,
   type ImageSize,
   type PageSection,
@@ -221,21 +224,23 @@ export function PageEditor({
 }
 
 function BackgroundPicker({
+  label = "Background colour",
   value,
   onChange,
 }: {
+  label?: string;
   value: SectionBackground;
   onChange: (background: SectionBackground) => void;
 }) {
   return (
     <fieldset className="bg-picker">
       <legend>
-        Background colour
+        {label}
         <span className="bg-picker__current">
           {SECTION_BACKGROUND_LABELS[value]}
         </span>
       </legend>
-      <div className="bg-swatches" role="radiogroup" aria-label="Background colour">
+      <div className="bg-swatches" role="radiogroup" aria-label={label}>
         {SECTION_BACKGROUNDS.map((background) => {
           const selected = background === value;
           return (
@@ -477,6 +482,15 @@ function SectionFields({
             }
           />
         </label>
+        <BackgroundPicker
+          label="Eyebrow colour"
+          value={section.eyebrowColor}
+          onChange={(eyebrowColor) =>
+            onChange((current) =>
+              current.type === "hero" ? { ...current, eyebrowColor } : current,
+            )
+          }
+        />
         <label>
           Heading
           <input
@@ -490,6 +504,15 @@ function SectionFields({
             }
           />
         </label>
+        <BackgroundPicker
+          label="Heading colour"
+          value={section.headingColor}
+          onChange={(headingColor) =>
+            onChange((current) =>
+              current.type === "hero" ? { ...current, headingColor } : current,
+            )
+          }
+        />
         <label>
           Subheading
           <textarea
@@ -503,6 +526,66 @@ function SectionFields({
             }
           />
         </label>
+        <BackgroundPicker
+          label="Subheading colour"
+          value={section.subheadingColor}
+          onChange={(subheadingColor) =>
+            onChange((current) =>
+              current.type === "hero"
+                ? { ...current, subheadingColor }
+                : current,
+            )
+          }
+        />
+        <OptionPicker
+          label="Link buttons"
+          value={section.linkMode}
+          options={HERO_LINK_MODES}
+          labels={HERO_LINK_MODE_LABELS}
+          onChange={(linkMode: HeroLinkMode) =>
+            onChange((current) =>
+              current.type === "hero" ? { ...current, linkMode } : current,
+            )
+          }
+        />
+        {section.linkMode === "social" ? (
+          <p className="field-hint">
+            Shows the social media links from Site settings as buttons under
+            the hero text.
+          </p>
+        ) : null}
+        {section.linkMode === "custom" ? (
+          <>
+            <label>
+              Button text
+              <input
+                value={section.customLinkLabel}
+                onChange={(event) =>
+                  onChange((current) =>
+                    current.type === "hero"
+                      ? { ...current, customLinkLabel: event.target.value }
+                      : current,
+                  )
+                }
+              />
+            </label>
+            <label>
+              Button URL
+              <input
+                type="url"
+                placeholder="https://"
+                value={section.customLinkUrl}
+                onChange={(event) =>
+                  onChange((current) =>
+                    current.type === "hero"
+                      ? { ...current, customLinkUrl: event.target.value }
+                      : current,
+                  )
+                }
+              />
+            </label>
+          </>
+        ) : null}
         <label>
           Image (optional)
           <input
@@ -687,7 +770,14 @@ function SectionFields({
           labels={IMAGE_SIZE_LABELS}
           onChange={(size: ImageSize) =>
             onChange((current) =>
-              current.type === "image" ? { ...current, size } : current,
+              current.type === "image"
+                ? {
+                    ...current,
+                    size,
+                    combineWithAbove:
+                      size === "full-width" ? false : current.combineWithAbove,
+                  }
+                : current,
             )
           }
         />
@@ -702,21 +792,23 @@ function SectionFields({
             )
           }
         />
-        <label className="checkbox-row">
-          <input
-            type="checkbox"
-            checked={section.combineWithAbove}
-            onChange={(event) =>
-              onChange((current) =>
-                current.type === "image"
-                  ? { ...current, combineWithAbove: event.target.checked }
-                  : current,
-              )
-            }
-          />
-          Combine with section above
-        </label>
-        {section.combineWithAbove ? (
+        {section.size === "full-width" ? null : (
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={section.combineWithAbove}
+              onChange={(event) =>
+                onChange((current) =>
+                  current.type === "image"
+                    ? { ...current, combineWithAbove: event.target.checked }
+                    : current,
+                )
+              }
+            />
+            Combine with section above
+          </label>
+        )}
+        {section.combineWithAbove && section.size !== "full-width" ? (
           <OptionPicker
             label="Image position"
             value={section.combineSide}

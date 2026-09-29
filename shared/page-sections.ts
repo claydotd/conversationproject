@@ -1,10 +1,12 @@
 import {
   COMBINE_SIDES,
+  HERO_LINK_MODES,
   IMAGE_DIMENSIONS,
   IMAGE_SIZES,
   SECTION_BACKGROUNDS,
   type CombineSide,
   type GalleryImage,
+  type HeroLinkMode,
   type ImageDimension,
   type ImageSize,
   type PageSection,
@@ -35,6 +37,7 @@ export const IMAGE_SIZE_LABELS: Record<ImageSize, string> = {
   small: "Small",
   medium: "Medium",
   large: "Large",
+  "full-width": "Full-Width",
 };
 
 export const IMAGE_DIMENSION_LABELS: Record<ImageDimension, string> = {
@@ -42,6 +45,12 @@ export const IMAGE_DIMENSION_LABELS: Record<ImageDimension, string> = {
   landscape: "Landscape",
   portrait: "Portrait",
   uncropped: "Uncropped",
+};
+
+export const HERO_LINK_MODE_LABELS: Record<HeroLinkMode, string> = {
+  none: "None",
+  social: "Social media links",
+  custom: "Custom link button",
 };
 
 export const COMBINE_SIDE_LABELS: Record<CombineSide, string> = {
@@ -98,6 +107,13 @@ export function isImageDimension(value: unknown): value is ImageDimension {
   );
 }
 
+export function isHeroLinkMode(value: unknown): value is HeroLinkMode {
+  return (
+    typeof value === "string" &&
+    (HERO_LINK_MODES as readonly string[]).includes(value)
+  );
+}
+
 export function isCombineSide(value: unknown): value is CombineSide {
   return (
     typeof value === "string" &&
@@ -121,6 +137,13 @@ export function sectionSurfaceClass(background: SectionBackground): string {
     classes.push("section-bg--inverse");
   }
   return classes.join(" ");
+}
+
+export function sectionColorVar(
+  color: SectionBackground,
+): string | undefined {
+  if (color === "default") return undefined;
+  return `var(--${color})`;
 }
 
 export function createSectionId(): string {
@@ -148,9 +171,15 @@ export function createPageSection(type: SectionType): PageSection {
         eyebrow: "",
         heading: "",
         subheading: "",
+        eyebrowColor: "default",
+        headingColor: "default",
+        subheadingColor: "default",
         imageUrl: "",
         imageAlt: "",
-        imageDimension: "portrait",
+        imageDimension: "landscape",
+        linkMode: "none",
+        customLinkLabel: "",
+        customLinkUrl: "",
       };
     case "text":
       return {

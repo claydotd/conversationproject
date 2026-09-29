@@ -24,7 +24,13 @@ export function Header() {
         Skip to content
       </a>
       <div className="site-header__inner">
-        <NavLink className="brand" to="/" onClick={() => setOpen(false)}>
+        <NavLink
+          className={
+            content.site.tagline ? "brand" : "brand brand--no-tagline"
+          }
+          to="/"
+          onClick={() => setOpen(false)}
+        >
           <img className="brand__logo" src={logoUrl} alt="" />
           <span className="brand__text">
             <span className="brand__name">{content.site.name}</span>

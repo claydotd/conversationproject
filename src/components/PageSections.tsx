@@ -6,12 +6,12 @@ import type {
   TestimonialSection as TestimonialContent,
   TextAlign,
 } from "@shared/types";
-import { sectionSurfaceClass } from "@shared/page-sections";
+import { sectionColorVar, sectionSurfaceClass } from "@shared/page-sections";
 import { parseInlineMarkdown } from "@shared/inline-markdown";
 import { revealDelayForIndex, useReveal } from "../hooks/useReveal";
 import { ContactForm } from "./ContactForm";
 import { EventList } from "./EventList";
-import { PageHero } from "./PageHero";
+import { PageHero, HeroActions } from "./PageHero";
 import { SocialLinks } from "./SocialLinks";
 import { TestimonialsClothesline } from "./TestimonialSection";
 
@@ -43,6 +43,7 @@ function clusterSections(sections: PageSection[]): SectionCluster[] {
     if (
       section.type === "image" &&
       section.combineWithAbove &&
+      section.size !== "full-width" &&
       section.imageUrl
     ) {
       const last = clusters[clusters.length - 1];
@@ -252,7 +253,10 @@ function ImageBlock({
   if (!imageUrl) return null;
   return (
     <SectionFrame
-      className="image-block"
+      className={cx(
+        "image-block",
+        size === "full-width" && "image-block--full-width",
+      )}
       background={background}
       revealDelayMs={revealDelayMs}
     >
@@ -302,18 +306,41 @@ function GalleryBlock({
 
 function CombinedPrimaryContent({ section }: { section: PageSection }) {
   switch (section.type) {
-    case "hero":
+    case "hero": {
+      const eyebrowColor = sectionColorVar(section.eyebrowColor);
+      const headingColor = sectionColorVar(section.headingColor);
+      const subheadingColor = sectionColorVar(section.subheadingColor);
       return (
         <div className="hero__copy">
           {section.eyebrow ? (
-            <p className="hero__eyebrow">{section.eyebrow}</p>
+            <p
+              className="hero__eyebrow"
+              style={eyebrowColor ? { color: eyebrowColor } : undefined}
+            >
+              {section.eyebrow}
+            </p>
           ) : null}
-          {section.heading ? <h1>{section.heading}</h1> : null}
+          {section.heading ? (
+            <h1 style={headingColor ? { color: headingColor } : undefined}>
+              {section.heading}
+            </h1>
+          ) : null}
           {section.subheading ? (
-            <p className="hero__sub">{section.subheading}</p>
+            <p
+              className="hero__sub"
+              style={subheadingColor ? { color: subheadingColor } : undefined}
+            >
+              {section.subheading}
+            </p>
           ) : null}
+          <HeroActions
+            linkMode={section.linkMode}
+            customLinkLabel={section.customLinkLabel}
+            customLinkUrl={section.customLinkUrl}
+          />
         </div>
       );
+    }
     case "text":
       if (!section.heading && !section.body) return null;
       return (
@@ -443,9 +470,15 @@ function SectionView({
           eyebrow={section.eyebrow}
           heading={section.heading}
           subheading={section.subheading}
+          eyebrowColor={section.eyebrowColor}
+          headingColor={section.headingColor}
+          subheadingColor={section.subheadingColor}
           imageUrl={section.imageUrl}
           imageAlt={section.imageAlt}
           imageDimension={section.imageDimension}
+          linkMode={section.linkMode}
+          customLinkLabel={section.customLinkLabel}
+          customLinkUrl={section.customLinkUrl}
           className={sectionSurfaceClass(section.background)}
           revealDelayMs={revealDelayMs}
         />

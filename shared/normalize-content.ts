@@ -1,6 +1,7 @@
 import {
   createSectionId,
   isCombineSide,
+  isHeroLinkMode,
   isImageDimension,
   isImageSize,
   isSectionBackground,
@@ -17,6 +18,7 @@ import {
   PAGE_SLUGS,
   type CombineSide,
   type GalleryImage,
+  type HeroLinkMode,
   type ImageDimension,
   type ImageSize,
   type PageContent,
@@ -77,6 +79,10 @@ function normalizeImageDimension(value: unknown): ImageDimension {
   return isImageDimension(value) ? value : "uncropped";
 }
 
+function normalizeHeroLinkMode(value: unknown): HeroLinkMode {
+  return isHeroLinkMode(value) ? value : "none";
+}
+
 function normalizeCombineSide(value: unknown): CombineSide {
   return isCombineSide(value) ? value : "right";
 }
@@ -130,11 +136,17 @@ function normalizeSection(value: unknown): PageSection | null {
       eyebrow: asString(item.eyebrow),
       heading: asString(item.heading),
       subheading: asString(item.subheading),
+      eyebrowColor: normalizeBackground(item.eyebrowColor),
+      headingColor: normalizeBackground(item.headingColor),
+      subheadingColor: normalizeBackground(item.subheadingColor),
       imageUrl: asString(item.imageUrl),
       imageAlt: asString(item.imageAlt),
       imageDimension: normalizeImageDimension(
-        item.imageDimension ?? "portrait",
+        item.imageDimension ?? "landscape",
       ),
+      linkMode: normalizeHeroLinkMode(item.linkMode),
+      customLinkLabel: asString(item.customLinkLabel),
+      customLinkUrl: asString(item.customLinkUrl),
     };
   }
 
@@ -159,7 +171,9 @@ function normalizeSection(value: unknown): PageSection | null {
       imageUrl: asString(item.imageUrl),
       alt: asString(item.alt),
       caption: asString(item.caption),
-      size: normalizeImageSize(item.size),
+      size: item.fullWidth
+        ? "full-width"
+        : normalizeImageSize(item.size),
       dimension: normalizeImageDimension(item.dimension),
       combineWithAbove: Boolean(item.combineWithAbove),
       combineSide: normalizeCombineSide(item.combineSide),
@@ -314,9 +328,15 @@ function normalizePage(
       eyebrow: title,
       heading,
       subheading,
+      eyebrowColor: "default",
+      headingColor: "default",
+      subheadingColor: "default",
       imageUrl: "",
       imageAlt: "",
-      imageDimension: "portrait",
+      imageDimension: "landscape",
+      linkMode: "none",
+      customLinkLabel: "",
+      customLinkUrl: "",
     });
   }
 

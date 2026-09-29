@@ -35,7 +35,7 @@ export type PermanentSectionType = (typeof PERMANENT_SECTION_TYPES)[number];
 export const TEXT_ALIGNS = ["left", "center", "right"] as const;
 export type TextAlign = (typeof TEXT_ALIGNS)[number];
 
-export const IMAGE_SIZES = ["small", "medium", "large"] as const;
+export const IMAGE_SIZES = ["small", "medium", "large", "full-width"] as const;
 export type ImageSize = (typeof IMAGE_SIZES)[number];
 
 export const IMAGE_DIMENSIONS = [
@@ -45,6 +45,9 @@ export const IMAGE_DIMENSIONS = [
   "uncropped",
 ] as const;
 export type ImageDimension = (typeof IMAGE_DIMENSIONS)[number];
+
+export const HERO_LINK_MODES = ["none", "social", "custom"] as const;
+export type HeroLinkMode = (typeof HERO_LINK_MODES)[number];
 
 export const COMBINE_SIDES = ["left", "right"] as const;
 export type CombineSide = (typeof COMBINE_SIDES)[number];
@@ -93,9 +96,15 @@ export interface HeroSection extends PageSectionBase {
   eyebrow: string;
   heading: string;
   subheading: string;
+  eyebrowColor: SectionBackground;
+  headingColor: SectionBackground;
+  subheadingColor: SectionBackground;
   imageUrl: string;
   imageAlt: string;
   imageDimension: ImageDimension;
+  linkMode: HeroLinkMode;
+  customLinkLabel: string;
+  customLinkUrl: string;
 }
 
 export interface TextSection extends PageSectionBase {

@@ -24,6 +24,19 @@ export const SOCIAL_PLATFORM_LABELS: Record<SocialPlatform, string> = {
   other: "Other…",
 };
 
+/** Font Awesome free brand/solid icon classes for each platform. */
+export const SOCIAL_PLATFORM_ICONS: Record<SocialPlatform, string> = {
+  instagram: "fa-brands fa-instagram",
+  facebook: "fa-brands fa-facebook",
+  x: "fa-brands fa-x-twitter",
+  linkedin: "fa-brands fa-linkedin",
+  youtube: "fa-brands fa-youtube",
+  tiktok: "fa-brands fa-tiktok",
+  threads: "fa-brands fa-threads",
+  bluesky: "fa-brands fa-bluesky",
+  other: "fa-solid fa-link",
+};
+
 export function isSocialPlatform(value: unknown): value is SocialPlatform {
   return (
     typeof value === "string" &&
