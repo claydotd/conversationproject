@@ -476,6 +476,7 @@ function SectionView({
           imageUrl={section.imageUrl}
           imageAlt={section.imageAlt}
           imageDimension={section.imageDimension}
+          imageOverlay={section.imageOverlay}
           linkMode={section.linkMode}
           customLinkLabel={section.customLinkLabel}
           customLinkUrl={section.customLinkUrl}

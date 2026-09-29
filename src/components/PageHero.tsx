@@ -13,6 +13,7 @@ interface PageHeroProps {
   imageUrl?: string;
   imageAlt?: string;
   imageDimension?: ImageDimension;
+  imageOverlay?: boolean;
   linkMode?: HeroLinkMode;
   customLinkLabel?: string;
   customLinkUrl?: string;
@@ -61,6 +62,7 @@ export function PageHero({
   imageUrl = "",
   imageAlt = "",
   imageDimension = "landscape",
+  imageOverlay = false,
   linkMode = "none",
   customLinkLabel = "",
   customLinkUrl = "",
@@ -75,6 +77,7 @@ export function PageHero({
   const classes = [
     "hero",
     hasImage ? "hero--with-image" : "",
+    hasImage && imageOverlay ? "hero--with-overlay" : "",
     className,
     reveal.className,
   ]

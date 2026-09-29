@@ -144,6 +144,7 @@ function normalizeSection(value: unknown): PageSection | null {
       imageDimension: normalizeImageDimension(
         item.imageDimension ?? "landscape",
       ),
+      imageOverlay: Boolean(item.imageOverlay),
       linkMode: normalizeHeroLinkMode(item.linkMode),
       customLinkLabel: asString(item.customLinkLabel),
       customLinkUrl: asString(item.customLinkUrl),
@@ -334,6 +335,7 @@ function normalizePage(
       imageUrl: "",
       imageAlt: "",
       imageDimension: "landscape",
+      imageOverlay: false,
       linkMode: "none",
       customLinkLabel: "",
       customLinkUrl: "",

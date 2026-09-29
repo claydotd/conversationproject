@@ -623,34 +623,53 @@ function SectionFields({
           />
         </label>
         {section.imageUrl ? (
-          <OptionPicker
-            label="Image dimensions"
-            value={section.imageDimension}
-            options={IMAGE_DIMENSIONS}
-            labels={IMAGE_DIMENSION_LABELS}
-            onChange={(imageDimension: ImageDimension) =>
-              onChange((current) =>
-                current.type === "hero"
-                  ? { ...current, imageDimension }
-                  : current,
-              )
-            }
-          />
-        ) : null}
-        {section.imageUrl ? (
-          <button
-            className="ghost"
-            type="button"
-            onClick={() =>
-              onChange((current) =>
-                current.type === "hero"
-                  ? { ...current, imageUrl: "", imageAlt: "" }
-                  : current,
-              )
-            }
-          >
-            Remove image
-          </button>
+          <>
+            <OptionPicker
+              label="Image dimensions"
+              value={section.imageDimension}
+              options={IMAGE_DIMENSIONS}
+              labels={IMAGE_DIMENSION_LABELS}
+              onChange={(imageDimension: ImageDimension) =>
+                onChange((current) =>
+                  current.type === "hero"
+                    ? { ...current, imageDimension }
+                    : current,
+                )
+              }
+            />
+            <label className="checkbox-row">
+              <input
+                type="checkbox"
+                checked={section.imageOverlay}
+                onChange={(event) =>
+                  onChange((current) =>
+                    current.type === "hero"
+                      ? { ...current, imageOverlay: event.target.checked }
+                      : current,
+                  )
+                }
+              />
+              Dim image for text readability
+            </label>
+            <button
+              className="ghost"
+              type="button"
+              onClick={() =>
+                onChange((current) =>
+                  current.type === "hero"
+                    ? {
+                        ...current,
+                        imageUrl: "",
+                        imageAlt: "",
+                        imageOverlay: false,
+                      }
+                    : current,
+                )
+              }
+            >
+              Remove image
+            </button>
+          </>
         ) : null}
       </>
     );

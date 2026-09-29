@@ -177,6 +177,7 @@ export function createPageSection(type: SectionType): PageSection {
         imageUrl: "",
         imageAlt: "",
         imageDimension: "landscape",
+        imageOverlay: false,
         linkMode: "none",
         customLinkLabel: "",
         customLinkUrl: "",

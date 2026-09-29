@@ -297,6 +297,11 @@ p:last-child {
   padding-bottom: var(--section-pad-y);
 }
 
+.hero--with-image {
+  position: relative;
+  padding: 0;
+}
+
 .hero__inner {
   display: flex;
   flex-direction: column;
@@ -307,7 +312,21 @@ p:last-child {
 }
 
 .hero--with-image .hero__inner {
-  padding-bottom: clamp(1.75rem, 4vw, 2.75rem);
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: min(var(--measure), calc(100% - 2.5rem));
+  height: auto;
+  margin: 0 auto;
+  justify-content: center;
+  padding: var(--section-pad-y) 0;
+  pointer-events: none;
+}
+
+.hero--with-image .hero__inner a,
+.hero--with-image .hero__inner button,
+.hero--with-image .hero__actions {
+  pointer-events: auto;
 }
 
 .hero__copy {
@@ -382,6 +401,7 @@ p:last-child {
 }
 
 .hero__media {
+  position: relative;
   width: 100%;
   min-width: 0;
 }
@@ -392,6 +412,14 @@ p:last-child {
   object-fit: cover;
   border-radius: 0;
   background: var(--paper-deep);
+}
+
+.hero--with-overlay .hero__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(28, 25, 22, 0.38);
+  pointer-events: none;
 }
 
 .hero__media--square img {
@@ -410,11 +438,23 @@ p:last-child {
   object-position: center top;
 }
 
+.hero__media--uncropped {
+  display: flex;
+  justify-content: center;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  background: transparent;
+}
+
 .hero__media--uncropped img {
   aspect-ratio: auto;
+  width: auto;
+  max-width: 100%;
   height: auto;
-  object-fit: contain;
   max-height: 40rem;
+  object-fit: contain;
+  background: transparent;
 }
 
 /* Scroll / load reveals — soft rise + fade, optional child stagger */
@@ -640,6 +680,14 @@ p:last-child {
   padding-top: var(--section-pad-y-first);
 }
 
+.page-stack > .hero.hero--with-image:first-child {
+  padding-top: 0;
+}
+
+.page-stack > .hero.hero--with-image:first-child .hero__inner {
+  padding-top: var(--section-pad-y-first);
+}
+
 .image-block h2,
 .gallery-section h2,
 .image-figure h2,
@@ -719,9 +767,13 @@ p:last-child {
 
 .image-figure--dim-uncropped img {
   aspect-ratio: auto;
+  width: auto;
+  max-width: 100%;
   height: auto;
   max-height: 36rem;
+  margin-inline: auto;
   object-fit: contain;
+  background: transparent;
 }
 
 .image-figure--small.image-figure--dim-uncropped img {

@@ -102,6 +102,7 @@ export interface HeroSection extends PageSectionBase {
   imageUrl: string;
   imageAlt: string;
   imageDimension: ImageDimension;
+  imageOverlay: boolean;
   linkMode: HeroLinkMode;
   customLinkLabel: string;
   customLinkUrl: string;
