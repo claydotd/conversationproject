@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { defaultContent } from "@shared/default-content";
+import { emptyContent } from "@shared/default-content";
 import { normalizeSiteContent } from "@shared/normalize-content";
 import type { SiteContent } from "@shared/types";
 import { fetchPublishedContent } from "./api";
@@ -19,7 +19,7 @@ interface ContentContextValue {
 const ContentContext = createContext<ContentContextValue | null>(null);
 
 export function ContentProvider({ children }: { children: ReactNode }) {
-  const [content, setContent] = useState<SiteContent>(defaultContent);
+  const [content, setContent] = useState<SiteContent>(emptyContent);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

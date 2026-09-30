@@ -1,4 +1,35 @@
-import type { PageContent, SiteContent } from "./types";
+import { PAGE_SLUGS, type PageContent, type PageSlug, type SiteContent } from "./types";
+
+function emptyPage(slug: PageSlug): PageContent {
+  return {
+    slug,
+    title: "",
+    sections: [],
+    seoTitle: "",
+    seoDescription: "",
+  };
+}
+
+/** Blank site used on first paint before published content loads. */
+export const emptyContent: SiteContent = {
+  site: {
+    name: "",
+    tagline: "",
+    footerText: "",
+    contactEmail: "",
+    contactPhone: "",
+    contactAddress: "",
+    newsletterHeading: "",
+    newsletterParagraph: "",
+    newsletterConsentLabel: "",
+    social: [],
+  },
+  pages: Object.fromEntries(
+    PAGE_SLUGS.map((slug) => [slug, emptyPage(slug)]),
+  ) as Record<PageSlug, PageContent>,
+  testimonials: [],
+  publishedAt: null,
+};
 
 const home: PageContent = {
   slug: "home",
