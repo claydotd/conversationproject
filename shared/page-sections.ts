@@ -1,11 +1,13 @@
 import {
   COMBINE_SIDES,
+  GALLERY_IMAGE_FITS,
   HERO_LINK_MODES,
   IMAGE_DIMENSIONS,
   IMAGE_SIZES,
   SECTION_BACKGROUNDS,
   type CombineSide,
   type GalleryImage,
+  type GalleryImageFit,
   type HeroLinkMode,
   type ImageDimension,
   type ImageSize,
@@ -45,6 +47,14 @@ export const IMAGE_DIMENSION_LABELS: Record<ImageDimension, string> = {
   landscape: "Landscape",
   portrait: "Portrait",
   uncropped: "Uncropped",
+};
+
+export const GALLERY_IMAGE_FIT_LABELS: Record<GalleryImageFit, string> = {
+  cover: "Crop to fill",
+  stretch: "Stretch to fit",
+  "crop-width": "Crop to width",
+  "crop-height": "Crop to height",
+  contain: "Show whole image",
 };
 
 export const HERO_LINK_MODE_LABELS: Record<HeroLinkMode, string> = {
@@ -107,6 +117,13 @@ export function isImageDimension(value: unknown): value is ImageDimension {
   );
 }
 
+export function isGalleryImageFit(value: unknown): value is GalleryImageFit {
+  return (
+    typeof value === "string" &&
+    (GALLERY_IMAGE_FITS as readonly string[]).includes(value)
+  );
+}
+
 export function isHeroLinkMode(value: unknown): value is HeroLinkMode {
   return (
     typeof value === "string" &&
@@ -156,6 +173,7 @@ export function createGalleryImage(): GalleryImage {
     imageUrl: "",
     alt: "",
     caption: "",
+    fit: "cover",
   };
 }
 

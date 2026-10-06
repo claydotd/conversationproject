@@ -19,12 +19,14 @@ function sign(payload: string): string {
 export function createDownloadToken(input: {
   email: string;
   productId: string;
+  downloadId: string;
 }): string {
   const exp = Date.now() + TOKEN_TTL_MS;
   const payload = Buffer.from(
     JSON.stringify({
       email: input.email.trim().toLowerCase(),
       productId: input.productId,
+      downloadId: input.downloadId,
       exp,
     }),
     "utf8",
@@ -35,6 +37,7 @@ export function createDownloadToken(input: {
 export function verifyDownloadToken(token: string): {
   email: string;
   productId: string;
+  downloadId: string;
 } | null {
   const [payload, signature] = token.split(".");
   if (!payload || !signature) return null;
@@ -47,16 +50,26 @@ export function verifyDownloadToken(token: string): {
   try {
     const data = JSON.parse(
       Buffer.from(payload, "base64url").toString("utf8"),
-    ) as { email?: string; productId?: string; exp?: number };
+    ) as {
+      email?: string;
+      productId?: string;
+      downloadId?: string;
+      exp?: number;
+    };
     if (
       typeof data.email !== "string" ||
       typeof data.productId !== "string" ||
+      typeof data.downloadId !== "string" ||
       typeof data.exp !== "number" ||
       data.exp < Date.now()
     ) {
       return null;
     }
-    return { email: data.email, productId: data.productId };
+    return {
+      email: data.email,
+      productId: data.productId,
+      downloadId: data.downloadId,
+    };
   } catch {
     return null;
   }

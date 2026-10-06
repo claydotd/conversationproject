@@ -9,6 +9,8 @@ import type {
   Product,
 } from "@shared/shop";
 import type { SiteContent } from "@shared/types";
+import { fileToBase64 } from "@shared/upload";
+import { compressImageForUpload } from "./compressImage";
 
 async function readError(response: Response, fallback: string): Promise<string> {
   const payload = (await response.json().catch(() => null)) as
@@ -78,18 +80,32 @@ export async function saveAdminContent(
   return normalizeSiteContent(await response.json());
 }
 
-export async function uploadAdminImage(file: File): Promise<string> {
-  const body = new FormData();
-  body.append("file", file);
+export async function uploadAdminImage(file: File): Promise<{
+  url: string;
+  originalBytes: number;
+  compressedBytes: number;
+}> {
+  const prepared = await compressImageForUpload(file);
+  // JSON + base64: Netlify's local functions emulator corrupts multipart bodies
+  // (reads as text while marking isBase64Encoded), which breaks req.formData().
   const response = await fetch("/api/admin/media", {
     method: "POST",
-    body,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      filename: prepared.file.name,
+      contentType: prepared.file.type,
+      data: await fileToBase64(prepared.file),
+    }),
   });
   if (!response.ok) {
     throw new Error(await readError(response, "Unable to upload the image."));
   }
   const payload = (await response.json()) as { url: string };
-  return payload.url;
+  return {
+    url: payload.url,
+    originalBytes: prepared.originalBytes,
+    compressedBytes: prepared.compressedBytes,
+  };
 }
 
 export async function fetchEvents(): Promise<EventsListing> {
@@ -163,11 +179,14 @@ export async function deleteAdminProduct(id: string): Promise<void> {
 }
 
 export async function uploadAdminProductFile(file: File): Promise<string> {
-  const body = new FormData();
-  body.append("file", file);
   const response = await fetch("/api/admin/product-files", {
     method: "POST",
-    body,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      filename: file.name,
+      contentType: file.type || "application/octet-stream",
+      data: await fileToBase64(file),
+    }),
   });
   if (!response.ok) {
     throw new Error(await readError(response, "Unable to upload the file."));

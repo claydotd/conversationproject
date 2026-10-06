@@ -41,10 +41,15 @@ export async function writeCachedEvents(listing: EventsListing): Promise<void> {
   await store.setJSON(EVENTS_KEY, listing);
 }
 
-export function mediaKey(fileName: string): string {
+export function mediaKey(fileName: string, forceExt?: string): string {
   const safe = fileName.replace(/[^a-zA-Z0-9._-]/g, "-").toLowerCase();
   const unique = crypto.randomUUID();
-  return `${unique}-${safe}`;
+  if (!forceExt) {
+    return `${unique}-${safe}`;
+  }
+  const ext = forceExt.replace(/^\./, "").toLowerCase();
+  const withoutExt = safe.replace(/\.[^.]+$/, "") || "image";
+  return `${unique}-${withoutExt}.${ext}`;
 }
 
 export function publicMediaPath(key: string): string {

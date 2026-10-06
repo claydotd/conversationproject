@@ -69,8 +69,16 @@ export function DownloadsPage() {
         {items && items.length > 0 ? (
           <ul className="download-list">
             {items.map((item) => (
-              <li key={item.productId}>
-                <span>{item.name}</span>
+              <li key={`${item.productId}:${item.downloadId}`}>
+                <span>
+                  {item.name}
+                  {item.label && item.label !== "Download" ? (
+                    <>
+                      {" "}
+                      <span className="muted">({item.label})</span>
+                    </>
+                  ) : null}
+                </span>
                 <a className="button-link" href={item.downloadUrl}>
                   Download
                 </a>

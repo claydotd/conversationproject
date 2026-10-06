@@ -1,6 +1,7 @@
 import {
   createSectionId,
   isCombineSide,
+  isGalleryImageFit,
   isHeroLinkMode,
   isImageDimension,
   isImageSize,
@@ -18,6 +19,7 @@ import {
   PAGE_SLUGS,
   type CombineSide,
   type GalleryImage,
+  type GalleryImageFit,
   type HeroLinkMode,
   type ImageDimension,
   type ImageSize,
@@ -108,6 +110,10 @@ function normalizeSocialLink(value: unknown): SocialLink | null {
   };
 }
 
+function normalizeGalleryImageFit(value: unknown): GalleryImageFit {
+  return isGalleryImageFit(value) ? value : "cover";
+}
+
 function normalizeGalleryImage(value: unknown): GalleryImage | null {
   const item = asRecord(value);
   if (!item) return null;
@@ -118,6 +124,7 @@ function normalizeGalleryImage(value: unknown): GalleryImage | null {
     imageUrl,
     alt: asString(item.alt),
     caption: asString(item.caption),
+    fit: normalizeGalleryImageFit(item.fit),
   };
 }
 

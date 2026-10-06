@@ -1,4 +1,5 @@
-import type { Product, ProductKind } from "../../shared/shop";
+import type { Product, ProductDownload, ProductKind } from "../../shared/shop";
+import { normalizeProductDownloads } from "../../shared/shop";
 import { getDb } from "./db";
 
 interface ProductRow {
@@ -11,6 +12,7 @@ interface ProductRow {
   kind: ProductKind;
   image_url: string | null;
   download_blob_key: string | null;
+  downloads: unknown;
   inventory: number | string | null;
   published: boolean;
   sort_order: number | string;
@@ -26,7 +28,7 @@ function mapProduct(row: ProductRow): Product {
     currency: row.currency || "GBP",
     kind: row.kind,
     imageUrl: row.image_url || null,
-    downloadBlobKey: row.download_blob_key,
+    downloads: normalizeProductDownloads(row.downloads, row.download_blob_key),
     inventory:
       row.inventory === null || row.inventory === undefined
         ? null
@@ -36,11 +38,15 @@ function mapProduct(row: ProductRow): Product {
   };
 }
 
+function downloadsJson(downloads: ProductDownload[]): string {
+  return JSON.stringify(downloads);
+}
+
 export async function listPublishedProducts(): Promise<Product[]> {
   const db = getDb();
   const rows = await db.sql`
     SELECT id, name, slug, description, price_cents, currency, kind,
-           image_url, download_blob_key, inventory, published, sort_order
+           image_url, download_blob_key, downloads, inventory, published, sort_order
     FROM products
     WHERE published = TRUE
     ORDER BY sort_order ASC, name ASC
@@ -52,7 +58,7 @@ export async function listAllProducts(): Promise<Product[]> {
   const db = getDb();
   const rows = await db.sql`
     SELECT id, name, slug, description, price_cents, currency, kind,
-           image_url, download_blob_key, inventory, published, sort_order
+           image_url, download_blob_key, downloads, inventory, published, sort_order
     FROM products
     ORDER BY sort_order ASC, name ASC
   `;
@@ -64,7 +70,7 @@ export async function getProductsByIds(ids: string[]): Promise<Product[]> {
   const db = getDb();
   const rows = await db.sql`
     SELECT id, name, slug, description, price_cents, currency, kind,
-           image_url, download_blob_key, inventory, published, sort_order
+           image_url, download_blob_key, downloads, inventory, published, sort_order
     FROM products
     WHERE id = ANY(${ids})
   `;
@@ -82,15 +88,17 @@ export interface ProductWriteInput {
   inventory?: number | null;
   sortOrder?: number;
   imageUrl?: string | null;
-  downloadBlobKey?: string | null;
+  downloads?: ProductDownload[];
 }
 
 export async function createProduct(input: ProductWriteInput): Promise<Product> {
   const db = getDb();
+  const downloads =
+    input.kind === "digital" ? normalizeProductDownloads(input.downloads) : [];
   const rows = await db.sql`
     INSERT INTO products (
       name, slug, description, price_cents, currency, kind,
-      published, inventory, sort_order, image_url, download_blob_key
+      published, inventory, sort_order, image_url, download_blob_key, downloads
     ) VALUES (
       ${input.name},
       ${input.slug},
@@ -102,10 +110,11 @@ export async function createProduct(input: ProductWriteInput): Promise<Product> 
       ${input.inventory ?? null},
       ${input.sortOrder ?? 0},
       ${input.imageUrl ?? null},
-      ${input.downloadBlobKey ?? null}
+      ${null},
+      ${downloadsJson(downloads)}
     )
     RETURNING id, name, slug, description, price_cents, currency, kind,
-              image_url, download_blob_key, inventory, published, sort_order
+              image_url, download_blob_key, downloads, inventory, published, sort_order
   `;
   return mapProduct(rows[0] as ProductRow);
 }
@@ -115,6 +124,8 @@ export async function updateProduct(
   input: ProductWriteInput,
 ): Promise<Product | null> {
   const db = getDb();
+  const downloads =
+    input.kind === "digital" ? normalizeProductDownloads(input.downloads) : [];
   const rows = await db.sql`
     UPDATE products SET
       name = ${input.name},
@@ -127,11 +138,12 @@ export async function updateProduct(
       inventory = ${input.inventory ?? null},
       sort_order = ${input.sortOrder ?? 0},
       image_url = ${input.imageUrl ?? null},
-      download_blob_key = ${input.downloadBlobKey ?? null},
+      download_blob_key = ${null},
+      downloads = ${downloadsJson(downloads)},
       updated_at = NOW()
     WHERE id = ${id}
     RETURNING id, name, slug, description, price_cents, currency, kind,
-              image_url, download_blob_key, inventory, published, sort_order
+              image_url, download_blob_key, downloads, inventory, published, sort_order
   `;
   const row = rows[0] as ProductRow | undefined;
   return row ? mapProduct(row) : null;

@@ -554,18 +554,32 @@ p:last-child {
   transition-delay: calc(var(--reveal-delay, 0ms) + 250ms);
 }
 
+/* Image fades in first (opacity only); copy follows after */
 .hero.reveal .hero__media {
   opacity: 0;
-  transform: translateY(0.85rem) scale(0.995);
-  transition:
-    opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
-  transition-delay: calc(var(--reveal-delay, 0ms) + 220ms);
+  transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
 }
 
 .hero.reveal.is-revealed .hero__media {
   opacity: 1;
-  transform: none;
+}
+
+.hero--with-image.reveal.is-revealed .hero__copy > *:nth-child(1) {
+  transition-delay: calc(var(--reveal-delay, 0ms) + 550ms);
+}
+.hero--with-image.reveal.is-revealed .hero__copy > *:nth-child(2) {
+  transition-delay: calc(var(--reveal-delay, 0ms) + 620ms);
+}
+.hero--with-image.reveal.is-revealed .hero__copy > *:nth-child(3) {
+  transition-delay: calc(var(--reveal-delay, 0ms) + 690ms);
+}
+.hero--with-image.reveal.is-revealed .hero__copy > *:nth-child(4) {
+  transition-delay: calc(var(--reveal-delay, 0ms) + 760ms);
+}
+
+.hero--with-image.reveal.is-revealed .hero__actions {
+  transition-delay: calc(var(--reveal-delay, 0ms) + 760ms);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -825,12 +839,55 @@ p:last-child {
   gap: 1rem;
 }
 
-.gallery img {
-  width: 100%;
+.gallery__frame {
+  position: relative;
   aspect-ratio: 4 / 3;
-  object-fit: cover;
+  overflow: hidden;
   border-radius: var(--radius);
-  background: var(--paper-deep);
+  background: var(--paper);
+}
+
+.gallery__frame img {
+  display: block;
+  border-radius: 0;
+  background: transparent;
+}
+
+.gallery__frame--cover img,
+.gallery__frame--stretch img,
+.gallery__frame--contain img {
+  width: 100%;
+  height: 100%;
+}
+
+.gallery__frame--cover img {
+  object-fit: cover;
+}
+
+.gallery__frame--stretch img {
+  object-fit: fill;
+}
+
+.gallery__frame--contain img {
+  object-fit: contain;
+}
+
+.gallery__frame--crop-width img {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: auto;
+  transform: translateY(-50%);
+}
+
+.gallery__frame--crop-height img {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: auto;
+  height: 100%;
+  transform: translateX(-50%);
 }
 
 .image-block figcaption,
@@ -1407,6 +1464,27 @@ p:last-child {
   gap: 1rem;
 }
 
+.product-download-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.product-download-list li {
+  border: 1px solid var(--rule);
+  border-radius: 0.6rem;
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.product-download-external {
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--rule);
+}
+
 .card {
   border: 1px solid var(--rule);
   border-radius: 0.8rem;
@@ -1618,6 +1696,10 @@ p:last-child {
   border: 1px solid var(--rule);
   border-radius: 0.6rem;
   background: white;
+}
+
+.gallery-editor-preview {
+  width: min(20rem, 100%);
 }
 
 .login {

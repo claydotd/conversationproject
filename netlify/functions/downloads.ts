@@ -1,4 +1,5 @@
 import type { Config, Context } from "@netlify/functions";
+import { normalizeProductDownloads } from "../../shared/shop";
 import { productFilesStore } from "../lib/blobs";
 import {
   createDownloadToken,
@@ -35,17 +36,28 @@ async function handleListDownloads(req: Request) {
     return errorJson("Enter the email address used on your order.");
   }
 
-  const downloads = await listPaidDigitalDownloadsForEmail(email);
-  return json({
-    email,
-    items: downloads.map((item) => ({
-      productId: item.productId,
-      name: item.name,
+  const products = await listPaidDigitalDownloadsForEmail(email);
+  const items = products.flatMap((product) => {
+    const downloads = normalizeProductDownloads(
+      product.downloads,
+      product.downloadBlobKey,
+    );
+    return downloads.map((download) => ({
+      productId: product.productId,
+      downloadId: download.id,
+      name: product.name,
+      label: download.label,
       downloadUrl: publicDownloadPath(
-        createDownloadToken({ email, productId: item.productId }),
+        createDownloadToken({
+          email,
+          productId: product.productId,
+          downloadId: download.id,
+        }),
       ),
-    })),
+    }));
   });
+
+  return json({ email, items });
 }
 
 async function handleFileDownload(req: Request) {
@@ -65,23 +77,42 @@ async function handleFileDownload(req: Request) {
   }
 
   const [product] = await getProductsByIds([verified.productId]);
-  if (!product?.downloadBlobKey) {
+  const download = product?.downloads.find(
+    (item) => item.id === verified.downloadId,
+  );
+  if (!download) {
+    return errorJson("This download is not available yet.", 404);
+  }
+
+  if (download.source === "external") {
+    if (!download.url) {
+      return errorJson("This download is not available yet.", 404);
+    }
+    return Response.redirect(download.url, 302);
+  }
+
+  if (!download.blobKey) {
     return errorJson("This download is not available yet.", 404);
   }
 
   const store = productFilesStore();
-  const file = await store.get(product.downloadBlobKey, {
+  const file = await store.get(download.blobKey, {
     type: "arrayBuffer",
   });
   if (!file) {
     return errorJson("File not found.", 404);
   }
 
-  const extension =
-    product.downloadBlobKey.split(".").pop()?.toLowerCase() ?? "";
+  const extension = download.blobKey.split(".").pop()?.toLowerCase() ?? "";
   const contentType = MIME[extension] ?? "application/octet-stream";
+  const labelSlug = download.label
+    .toLowerCase()
+    .replace(/[^a-z0-9-_]+/g, "-")
+    .replace(/^-+|-+$/g, "");
   const safeName =
-    product.slug.replace(/[^a-z0-9-_]/gi, "-") || "download";
+    labelSlug ||
+    product.slug.replace(/[^a-z0-9-_]/gi, "-") ||
+    "download";
 
   return new Response(file, {
     status: 200,

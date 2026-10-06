@@ -276,7 +276,8 @@ export async function listPaidDigitalDownloadsForEmail(
   Array<{
     productId: string;
     name: string;
-    downloadBlobKey: string;
+    downloads: unknown;
+    downloadBlobKey: string | null;
   }>
 > {
   const db = getDb();
@@ -285,6 +286,7 @@ export async function listPaidDigitalDownloadsForEmail(
     SELECT DISTINCT ON (p.id)
       p.id AS product_id,
       p.name,
+      p.downloads,
       p.download_blob_key
     FROM orders o
     JOIN order_items oi ON oi.order_id = o.id
@@ -292,19 +294,23 @@ export async function listPaidDigitalDownloadsForEmail(
     WHERE o.status = 'paid'
       AND lower(o.email) = ${normalized}
       AND oi.kind = 'digital'
-      AND p.download_blob_key IS NOT NULL
-      AND p.download_blob_key <> ''
+      AND (
+        jsonb_array_length(COALESCE(p.downloads, '[]'::jsonb)) > 0
+        OR (p.download_blob_key IS NOT NULL AND p.download_blob_key <> '')
+      )
     ORDER BY p.id, o.created_at DESC
   `;
   return (
     rows as Array<{
       product_id: string;
       name: string;
-      download_blob_key: string;
+      downloads: unknown;
+      download_blob_key: string | null;
     }>
   ).map((row) => ({
     productId: row.product_id,
     name: row.name,
+    downloads: row.downloads,
     downloadBlobKey: row.download_blob_key,
   }));
 }

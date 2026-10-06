@@ -1,9 +1,10 @@
 import type { Dispatch, SetStateAction } from "react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   COMBINE_SIDE_LABELS,
   createGalleryImage,
   createPageSection,
+  GALLERY_IMAGE_FIT_LABELS,
   HERO_LINK_MODE_LABELS,
   IMAGE_DIMENSION_LABELS,
   IMAGE_SIZE_LABELS,
@@ -16,6 +17,7 @@ import { wrapInlineMarkdown, type InlineMark } from "@shared/inline-markdown";
 import {
   ADDABLE_SECTION_TYPES,
   COMBINE_SIDES,
+  GALLERY_IMAGE_FITS,
   HERO_LINK_MODES,
   IMAGE_DIMENSIONS,
   IMAGE_SIZES,
@@ -23,6 +25,8 @@ import {
   TEXT_ALIGNS,
   type CombineSide,
   type GalleryImage,
+  type GalleryImageFit,
+  type GallerySection,
   type HeroLinkMode,
   type ImageDimension,
   type ImageSize,
@@ -33,7 +37,7 @@ import {
   type SiteContent,
   type TextAlign,
 } from "@shared/types";
-import { uploadAdminImage } from "../../lib/api";
+import { AdminImageFileInput } from "../../components/AdminImageFileInput";
 
 export function PageEditor({
   slug,
@@ -90,15 +94,6 @@ export function PageEditor({
           section.id !== id || isPermanentSectionType(section.type),
       ),
     );
-  }
-
-  async function uploadTo(
-    file: File | undefined,
-    apply: (url: string) => void,
-  ) {
-    if (!file) return;
-    const url = await uploadAdminImage(file);
-    apply(url);
   }
 
   return (
@@ -213,7 +208,6 @@ export function PageEditor({
               <SectionFields
                 section={section}
                 onChange={(updater) => updateSection(section.id, updater)}
-                onUpload={uploadTo}
               />
             </article>
           );
@@ -404,14 +398,9 @@ function RichTextBodyField({
 function SectionFields({
   section,
   onChange,
-  onUpload,
 }: {
   section: PageSection;
   onChange: (updater: (current: PageSection) => PageSection) => void;
-  onUpload: (
-    file: File | undefined,
-    apply: (url: string) => void,
-  ) => Promise<void>;
 }) {
   if (section.type === "events-list") {
     return (
@@ -586,22 +575,14 @@ function SectionFields({
             </label>
           </>
         ) : null}
-        <label>
-          Image (optional)
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            onChange={(event) =>
-              void onUpload(event.target.files?.[0], (url) =>
-                onChange((current) =>
-                  current.type === "hero"
-                    ? { ...current, imageUrl: url }
-                    : current,
-                ),
-              )
-            }
-          />
-        </label>
+        <AdminImageFileInput
+          label="Image (optional)"
+          onUploaded={(url) =>
+            onChange((current) =>
+              current.type === "hero" ? { ...current, imageUrl: url } : current,
+            )
+          }
+        />
         {section.imageUrl ? (
           <img
             className="preview-image preview-image--wide"
@@ -737,22 +718,14 @@ function SectionFields({
             }
           />
         </label>
-        <label>
-          Image
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            onChange={(event) =>
-              void onUpload(event.target.files?.[0], (url) =>
-                onChange((current) =>
-                  current.type === "image"
-                    ? { ...current, imageUrl: url }
-                    : current,
-                ),
-              )
-            }
-          />
-        </label>
+        <AdminImageFileInput
+          label="Image"
+          onUploaded={(url) =>
+            onChange((current) =>
+              current.type === "image" ? { ...current, imageUrl: url } : current,
+            )
+          }
+        />
         {section.imageUrl ? (
           <img className="preview-image preview-image--wide" src={section.imageUrl} alt="" />
         ) : null}
@@ -861,76 +834,7 @@ function SectionFields({
 
   if (section.type === "gallery") {
     return (
-      <>
-        <label>
-          Heading (optional)
-          <input
-            value={section.heading}
-            onChange={(event) =>
-              onChange((current) =>
-                current.type === "gallery"
-                  ? { ...current, heading: event.target.value }
-                  : current,
-              )
-            }
-          />
-        </label>
-        {section.images.map((image) => (
-          <GalleryImageFields
-            key={image.id}
-            image={image}
-            onChange={(patch) =>
-              onChange((current) =>
-                current.type === "gallery"
-                  ? {
-                      ...current,
-                      images: current.images.map((item) =>
-                        item.id === image.id ? { ...item, ...patch } : item,
-                      ),
-                    }
-                  : current,
-              )
-            }
-            onUpload={onUpload}
-            onRemove={() =>
-              onChange((current) =>
-                current.type === "gallery"
-                  ? {
-                      ...current,
-                      images: current.images.filter(
-                        (item) => item.id !== image.id,
-                      ),
-                    }
-                  : current,
-              )
-            }
-          />
-        ))}
-        <label>
-          Add image
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              event.target.value = "";
-              void onUpload(file, (url) =>
-                onChange((current) =>
-                  current.type === "gallery"
-                    ? {
-                        ...current,
-                        images: [
-                          ...current.images,
-                          { ...createGalleryImage(), imageUrl: url },
-                        ],
-                      }
-                    : current,
-                ),
-              );
-            }}
-          />
-        </label>
-      </>
+      <GallerySectionFields section={section} onChange={onChange} />
     );
   }
 
@@ -975,22 +879,16 @@ function SectionFields({
           }
         />
       </label>
-      <label>
-        Photo (optional)
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          onChange={(event) =>
-            void onUpload(event.target.files?.[0], (url) =>
-              onChange((current) =>
-                current.type === "testimonial"
-                  ? { ...current, imageUrl: url }
-                  : current,
-              ),
-            )
-          }
-        />
-      </label>
+      <AdminImageFileInput
+        label="Photo (optional)"
+        onUploaded={(url) =>
+          onChange((current) =>
+            current.type === "testimonial"
+              ? { ...current, imageUrl: url }
+              : current,
+          )
+        }
+      />
       {section.imageUrl ? (
         <>
           <img className="preview-image" src={section.imageUrl} alt="" />
@@ -1013,41 +911,127 @@ function SectionFields({
   );
 }
 
-function GalleryImageFields({
-  image,
+function GallerySectionFields({
+  section,
   onChange,
-  onUpload,
-  onRemove,
 }: {
-  image: GalleryImage;
-  onChange: (patch: Partial<GalleryImage>) => void;
-  onUpload: (
-    file: File | undefined,
-    apply: (url: string) => void,
-  ) => Promise<void>;
-  onRemove: () => void;
+  section: GallerySection;
+  onChange: (updater: (current: PageSection) => PageSection) => void;
 }) {
+  const [sizeNotes, setSizeNotes] = useState<Record<string, string>>({});
+
   return (
-    <div className="gallery-editor-item">
-      {image.imageUrl ? (
-        <img
-          className="preview-image preview-image--wide"
-          src={image.imageUrl}
-          alt=""
-        />
-      ) : null}
+    <>
       <label>
-        Replace image
+        Heading (optional)
         <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
+          value={section.heading}
           onChange={(event) =>
-            void onUpload(event.target.files?.[0], (url) =>
-              onChange({ imageUrl: url }),
+            onChange((current) =>
+              current.type === "gallery"
+                ? { ...current, heading: event.target.value }
+                : current,
             )
           }
         />
       </label>
+      {section.images.map((image) => (
+        <GalleryImageFields
+          key={image.id}
+          image={image}
+          sizeNote={sizeNotes[image.id] ?? null}
+          onChange={(patch) =>
+            onChange((current) =>
+              current.type === "gallery"
+                ? {
+                    ...current,
+                    images: current.images.map((item) =>
+                      item.id === image.id ? { ...item, ...patch } : item,
+                    ),
+                  }
+                : current,
+            )
+          }
+          onSizeNote={(note) =>
+            setSizeNotes((current) => ({ ...current, [image.id]: note }))
+          }
+          onRemove={() => {
+            setSizeNotes((current) => {
+              const next = { ...current };
+              delete next[image.id];
+              return next;
+            });
+            onChange((current) =>
+              current.type === "gallery"
+                ? {
+                    ...current,
+                    images: current.images.filter(
+                      (item) => item.id !== image.id,
+                    ),
+                  }
+                : current,
+            );
+          }}
+        />
+      ))}
+      <AdminImageFileInput
+        label="Add image"
+        clearInputAfterSelect
+        onUploaded={(url, sizeNote) => {
+          const image = { ...createGalleryImage(), imageUrl: url };
+          setSizeNotes((current) => ({ ...current, [image.id]: sizeNote }));
+          onChange((current) =>
+            current.type === "gallery"
+              ? {
+                  ...current,
+                  images: [...current.images, image],
+                }
+              : current,
+          );
+        }}
+      />
+    </>
+  );
+}
+
+function GalleryImageFields({
+  image,
+  sizeNote,
+  onChange,
+  onSizeNote,
+  onRemove,
+}: {
+  image: GalleryImage;
+  sizeNote: string | null;
+  onChange: (patch: Partial<GalleryImage>) => void;
+  onSizeNote: (note: string) => void;
+  onRemove: () => void;
+}) {
+  const fit = image.fit ?? "cover";
+
+  return (
+    <div className="gallery-editor-item">
+      <AdminImageFileInput
+        label="Replace image"
+        previewUrl={image.imageUrl || undefined}
+        sizeNote={sizeNote}
+        renderPreview={(url) => (
+          <div className={`gallery__frame gallery__frame--${fit} gallery-editor-preview`}>
+            <img src={url} alt="" />
+          </div>
+        )}
+        onUploaded={(url, note) => {
+          onChange({ imageUrl: url });
+          onSizeNote(note);
+        }}
+      />
+      <OptionPicker
+        label="Image fit"
+        value={fit}
+        options={GALLERY_IMAGE_FITS}
+        labels={GALLERY_IMAGE_FIT_LABELS}
+        onChange={(nextFit: GalleryImageFit) => onChange({ fit: nextFit })}
+      />
       <label>
         Alt text
         <input

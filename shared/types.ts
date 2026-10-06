@@ -46,6 +46,16 @@ export const IMAGE_DIMENSIONS = [
 ] as const;
 export type ImageDimension = (typeof IMAGE_DIMENSIONS)[number];
 
+/** How a gallery image fills its fixed aspect-ratio frame. */
+export const GALLERY_IMAGE_FITS = [
+  "cover",
+  "stretch",
+  "crop-width",
+  "crop-height",
+  "contain",
+] as const;
+export type GalleryImageFit = (typeof GALLERY_IMAGE_FITS)[number];
+
 export const HERO_LINK_MODES = ["none", "social", "custom"] as const;
 export type HeroLinkMode = (typeof HERO_LINK_MODES)[number];
 
@@ -147,6 +157,7 @@ export interface GalleryImage {
   imageUrl: string;
   alt: string;
   caption: string;
+  fit: GalleryImageFit;
 }
 
 export interface GallerySection extends PageSectionBase {

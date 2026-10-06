@@ -1,8 +1,15 @@
 import type { Config, Context } from "@netlify/functions";
 import type { ProductKind } from "../../shared/shop";
-import { slugifyProductName } from "../../shared/shop";
+import {
+  normalizeProductDownloads,
+  slugifyProductName,
+} from "../../shared/shop";
 import type { SiteContent } from "../../shared/types";
 import { PAGE_SLUGS } from "../../shared/types";
+import {
+  decodeUploadedFilePayload,
+  isUploadedFilePayload,
+} from "../../shared/upload";
 import {
   clearSessionCookie,
   createSessionCookie,
@@ -45,6 +52,18 @@ const ALLOWED_PRODUCT_TYPES = new Set([
 ]);
 const PRODUCT_KINDS = new Set<ProductKind>(["digital", "physical"]);
 
+async function readUploadedFile(req: Request): Promise<File | null> {
+  const contentType = req.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    const body = (await req.json()) as unknown;
+    if (!isUploadedFilePayload(body)) return null;
+    return decodeUploadedFilePayload(body);
+  }
+
+  const form = await req.formData();
+  const file = form.get("file");
+  return file instanceof File ? file : null;
+}
 function unauthorized() {
   return errorJson("Sign in required.", 401);
 }
@@ -117,19 +136,21 @@ async function handleSaveContent(req: Request) {
 }
 
 async function handleUpload(req: Request) {
-  const form = await req.formData();
-  const file = form.get("file");
-  if (!(file instanceof File)) {
+  const file = await readUploadedFile(req);
+  if (!file) {
     return errorJson("Choose an image to upload.");
   }
   if (!ALLOWED_TYPES.has(file.type)) {
     return errorJson("Please upload a JPEG, PNG, WebP, or GIF image.");
   }
   if (file.size > MAX_UPLOAD_BYTES) {
-    return errorJson("Images need to be 4MB or smaller.");
+    return errorJson("Images need to be 4MB or smaller after compression.");
   }
 
-  const key = mediaKey(file.name);
+  const key =
+    file.type === "image/webp"
+      ? mediaKey(file.name, "webp")
+      : mediaKey(file.name);
   const store = mediaStore();
   await store.set(key, await file.arrayBuffer());
   return json({ key, url: publicMediaPath(key) });
@@ -158,6 +179,10 @@ function parseProductBody(body: Record<string, unknown>) {
     downloadBlobKeyRaw === ""
       ? null
       : String(downloadBlobKeyRaw);
+  const downloads = normalizeProductDownloads(
+    body.downloads,
+    downloadBlobKey,
+  );
   const imageUrlRaw = body.imageUrl;
   const imageUrl =
     imageUrlRaw === null ||
@@ -189,7 +214,7 @@ function parseProductBody(body: Record<string, unknown>) {
       inventory,
       sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0,
       imageUrl,
-      downloadBlobKey: kind === "digital" ? downloadBlobKey : null,
+      downloads: kind === "digital" ? downloads : [],
     },
   };
 }
@@ -253,16 +278,17 @@ async function handleDeleteProduct(id: string) {
 }
 
 async function handleProductFileUpload(req: Request) {
-  const form = await req.formData();
-  const file = form.get("file");
-  if (!(file instanceof File)) {
+  const file = await readUploadedFile(req);
+  if (!file) {
     return errorJson("Choose a file to upload.");
   }
   if (!ALLOWED_PRODUCT_TYPES.has(file.type) && !file.name.match(/\.(pdf|zip|epub|txt|png|jpe?g)$/i)) {
     return errorJson("Upload a PDF, ZIP, EPUB, text, or image file.");
   }
   if (file.size > MAX_PRODUCT_FILE_BYTES) {
-    return errorJson("Product files need to be 5MB or smaller.");
+    return errorJson(
+      "Product files need to be 5MB or smaller. For larger files, add an external download link instead.",
+    );
   }
 
   const key = mediaKey(file.name);

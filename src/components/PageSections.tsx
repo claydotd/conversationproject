@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type {
+  GalleryImage,
   ImageSection,
   PageSection,
   SectionBackground,
@@ -272,6 +273,18 @@ function ImageBlock({
   );
 }
 
+function GalleryFigure({ image }: { image: GalleryImage }) {
+  const fit = image.fit ?? "cover";
+  return (
+    <figure>
+      <div className={`gallery__frame gallery__frame--${fit}`}>
+        <img src={image.imageUrl} alt={image.alt} />
+      </div>
+      {image.caption ? <figcaption>{image.caption}</figcaption> : null}
+    </figure>
+  );
+}
+
 function GalleryBlock({
   heading,
   images,
@@ -279,7 +292,7 @@ function GalleryBlock({
   revealDelayMs,
 }: {
   heading: string;
-  images: { id: string; imageUrl: string; alt: string; caption: string }[];
+  images: GalleryImage[];
   background: SectionBackground;
   revealDelayMs?: number;
 }) {
@@ -294,10 +307,7 @@ function GalleryBlock({
       {heading ? <h2>{heading}</h2> : null}
       <div className="gallery">
         {visible.map((image) => (
-          <figure key={image.id}>
-            <img src={image.imageUrl} alt={image.alt} />
-            {image.caption ? <figcaption>{image.caption}</figcaption> : null}
-          </figure>
+          <GalleryFigure key={image.id} image={image} />
         ))}
       </div>
     </SectionFrame>
@@ -361,12 +371,7 @@ function CombinedPrimaryContent({ section }: { section: PageSection }) {
           {visible.length > 0 ? (
             <div className="gallery">
               {visible.map((image) => (
-                <figure key={image.id}>
-                  <img src={image.imageUrl} alt={image.alt} />
-                  {image.caption ? (
-                    <figcaption>{image.caption}</figcaption>
-                  ) : null}
-                </figure>
+                <GalleryFigure key={image.id} image={image} />
               ))}
             </div>
           ) : null}
