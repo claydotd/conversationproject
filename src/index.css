@@ -1689,15 +1689,29 @@ p:last-child {
   align-content: start;
 }
 
+.rich-text-preview--editable {
+  background: white;
+  cursor: text;
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.rich-text-preview--editable:focus {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--rule));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
 .rich-text-preview p {
   margin: 0;
   line-height: 1.6;
 }
 
-.rich-text-preview__empty {
-  margin: 0;
-  color: var(--ink-soft);
-  font-style: italic;
+.rich-text-preview a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+  cursor: text;
 }
 
 .card__header {
