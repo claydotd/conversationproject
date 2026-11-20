@@ -1,5 +1,3 @@
-@import url("https://use.typekit.net/spk6sbw.css");
-
 :root {
   --dark-background: #24277b;
   --mid-background: #89bbd7;
@@ -1104,9 +1102,8 @@ p:last-child {
 .social-links__icon {
   flex-shrink: 0;
   width: 1.15rem;
-  font-size: 1.15rem;
-  line-height: 1;
-  text-align: center;
+  height: 1.15rem;
+  display: block;
 }
 
 .section-bg--inverse .social-links__button {

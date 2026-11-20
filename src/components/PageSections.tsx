@@ -255,7 +255,7 @@ function ImageFigure({
     >
       {heading ? <h2>{heading}</h2> : null}
       <figure>
-        <img src={imageUrl} alt={alt} />
+        <img src={imageUrl} alt={alt} loading="lazy" decoding="async" />
         {caption ? <figcaption>{caption}</figcaption> : null}
       </figure>
     </div>
@@ -308,7 +308,12 @@ function GalleryFigure({ image }: { image: GalleryImage }) {
   return (
     <figure>
       <div className={`gallery__frame gallery__frame--${fit}`}>
-        <img src={image.imageUrl} alt={image.alt} />
+        <img
+          src={image.imageUrl}
+          alt={image.alt}
+          loading="lazy"
+          decoding="async"
+        />
       </div>
       {image.caption ? <figcaption>{image.caption}</figcaption> : null}
     </figure>

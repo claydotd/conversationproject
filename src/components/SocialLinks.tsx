@@ -1,21 +1,9 @@
-import type { SocialPlatform } from "@shared/social";
-import {
-  SOCIAL_PLATFORM_ICONS,
-  socialLinkDisplayLabel,
-} from "@shared/social";
+import { socialLinkDisplayLabel } from "@shared/social";
 import type { SectionBackground, TextAlign } from "@shared/types";
 import { sectionSurfaceClass } from "@shared/page-sections";
 import { useReveal } from "../hooks/useReveal";
+import { SocialPlatformIcon } from "../icons/SocialPlatformIcon";
 import { useSiteContent } from "../lib/content-context";
-
-function SocialIcon({ platform }: { platform: SocialPlatform }) {
-  return (
-    <i
-      className={`${SOCIAL_PLATFORM_ICONS[platform]} social-links__icon`}
-      aria-hidden="true"
-    />
-  );
-}
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -55,7 +43,10 @@ export function SocialLinkButtons({
             target="_blank"
             rel="noopener noreferrer"
           >
-            <SocialIcon platform={item.platform} />
+            <SocialPlatformIcon
+              platform={item.platform}
+              className="social-links__icon"
+            />
             <span>{label}</span>
           </a>
         );

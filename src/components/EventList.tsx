@@ -22,7 +22,12 @@ function EventCard({ event }: { event: SiteEvent }) {
       rel="noreferrer"
     >
       {event.imageUrl ? (
-        <img src={event.imageUrl} alt="" />
+        <img
+          src={event.imageUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
       ) : (
         <div className="event-card__placeholder" aria-hidden="true" />
       )}

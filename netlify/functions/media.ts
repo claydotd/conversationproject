@@ -36,6 +36,8 @@ export default async (req: Request, _context: Context) => {
     headers: {
       "Content-Type": contentType,
       "Cache-Control": "public, max-age=31536000, immutable",
+      "Netlify-CDN-Cache-Control":
+        "public, durable, s-maxage=31536000, immutable",
     },
   });
 };

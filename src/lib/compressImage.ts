@@ -1,4 +1,4 @@
-const MAX_EDGE_PX = 2400;
+const MAX_EDGE_PX = 1600;
 const WEBP_QUALITY = 0.82;
 const JPEG_FALLBACK_QUALITY = 0.85;
 /** Keep under Netlify Functions' ~4.5MB effective binary body limit. */
@@ -80,7 +80,7 @@ function canvasToBlob(
 }
 
 /**
- * Resize (max 2400px edge) and convert to WebP for admin media uploads.
+ * Resize (max 1600px edge) and convert to WebP for admin media uploads.
  * Falls back to JPEG if the browser cannot encode WebP.
  */
 export async function compressImageForUpload(
@@ -115,7 +115,7 @@ export async function compressImageForUpload(
     let ext = "webp";
 
     // Safari (incl. iOS) cannot encode WebP from canvas; toBlob silently
-    // returns a PNG instead of null. A 2400px PNG of a photo often exceeds 4MB
+    // returns a PNG instead of null. A large PNG of a photo often exceeds 4MB
     // even when the original JPEG was under 2MB.
     if (!blob || blob.size === 0 || blob.type !== "image/webp") {
       blob = await canvasToBlob(

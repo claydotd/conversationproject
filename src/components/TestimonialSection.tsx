@@ -7,7 +7,7 @@ import {
 import { sectionSurfaceClass } from "@shared/page-sections";
 import type { TestimonialSection as TestimonialContent } from "@shared/types";
 import { useReveal } from "../hooks/useReveal";
-import clothespegUrl from "../icons/clothespeg.png";
+import clothespegUrl from "../icons/clothespeg.webp";
 
 const NOTE_ROTATIONS = [-2.6, 1.8, -1.3, 2.4, -0.9, 1.5];
 const NOTE_OFFSETS = ["0.35rem", "0", "0.55rem", "0.15rem", "0.4rem", "0.1rem"];
@@ -66,8 +66,10 @@ function TestimonialNote({
         className="clothesline__peg"
         src={clothespegUrl}
         alt=""
-        width={48}
-        height={96}
+        width={72}
+        height={160}
+        decoding="async"
+        loading="lazy"
         aria-hidden="true"
       />
       <figure
@@ -76,7 +78,14 @@ function TestimonialNote({
         }
       >
         {item.imageUrl ? (
-          <img src={item.imageUrl} alt="" width={88} height={88} />
+          <img
+            src={item.imageUrl}
+            alt=""
+            width={88}
+            height={88}
+            loading="lazy"
+            decoding="async"
+          />
         ) : null}
         <div>
           {item.quote ? <blockquote>“{item.quote}”</blockquote> : null}

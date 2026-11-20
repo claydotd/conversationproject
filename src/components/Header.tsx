@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
-import logoUrl from "../icons/convologo.png";
+import logoUrl from "../icons/convologo.webp";
 import { TrolleyIcon } from "../icons/TrolleyIcon";
 import { useCart } from "../lib/cart-context";
 import { useSiteContent } from "../lib/content-context";
@@ -31,7 +31,15 @@ export function Header() {
           to="/"
           onClick={() => setOpen(false)}
         >
-          <img className="brand__logo" src={logoUrl} alt="" />
+          <img
+            className="brand__logo"
+            src={logoUrl}
+            alt=""
+            width={192}
+            height={192}
+            decoding="async"
+            fetchPriority="high"
+          />
           <span className="brand__text">
             <span className="brand__name">{content.site.name}</span>
             {content.site.tagline ? (

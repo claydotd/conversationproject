@@ -20,7 +20,7 @@ From `/admin` the owner can change:
 - Site name, tagline, footer, email, phone, address, social links
 - Each page’s SEO text and an ordered list of sections
 - Section types: optional hero, text, image block, image gallery, and testimonial
-- Image uploads (pages and product photos) are resized in the browser (max 2400px edge) and converted to WebP before upload, so phone camera photos work while public loads stay small. The post-compress upload cap is 4MB (Netlify Functions body limit).
+- Image uploads (pages and product photos) are resized in the browser (max 1600px edge) and converted to WebP before upload, so phone camera photos work while public loads stay small. Images already published stay as-is until re-uploaded. The post-compress upload cap is 4MB (Netlify Functions body limit).
 - **Products**: add/edit shop items (name, price, digital/physical, publish, multiple digital files and/or external download links). Product saves go straight to the database and do not use **Save and publish**.
 
 **Save and publish** writes page content to the database once, then refreshes the Blob snapshot the public site reads.

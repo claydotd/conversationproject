@@ -110,7 +110,12 @@ export function PageHero({
       </div>
       {hasImage ? (
         <div className={`hero__media hero__media--${imageDimension}`}>
-          <img src={imageUrl} alt={imageAlt} />
+          <img
+            src={imageUrl}
+            alt={imageAlt}
+            decoding="async"
+            fetchPriority="high"
+          />
         </div>
       ) : null}
     </section>

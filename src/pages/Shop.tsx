@@ -86,7 +86,12 @@ export function ShopPage() {
             {products.map((product) => (
               <li key={product.id} className="product-card">
                 {product.imageUrl ? (
-                  <img src={product.imageUrl} alt="" />
+                  <img
+                    src={product.imageUrl}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
                 ) : (
                   <div className="product-card__placeholder" aria-hidden="true" />
                 )}
