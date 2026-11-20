@@ -14,12 +14,23 @@ import { SiteSettingsEditor } from "./SiteSettingsEditor";
 
 type Panel = "site" | "products" | PageSlug;
 
+const NAV_ITEMS: Array<{ id: Panel; label: string }> = [
+  { id: "site", label: "Site settings" },
+  { id: "home", label: "Home" },
+  { id: "about", label: "About" },
+  { id: "events", label: "Events" },
+  { id: "contact", label: "Contact" },
+  { id: "terms", label: "Terms" },
+  { id: "products", label: "Products" },
+];
+
 export function AdminApp() {
   const [ready, setReady] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const [passwordConfigured, setPasswordConfigured] = useState(true);
   const [content, setContent] = useState<SiteContent | null>(null);
   const [panel, setPanel] = useState<Panel>("site");
+  const [navOpen, setNavOpen] = useState(false);
   const [status, setStatus] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -52,6 +63,11 @@ export function AdminApp() {
       if (!current) return current;
       return typeof action === "function" ? action(current) : action;
     });
+  }
+
+  function selectPanel(next: Panel) {
+    setPanel(next);
+    setNavOpen(false);
   }
 
   async function onSave() {
@@ -92,56 +108,29 @@ export function AdminApp() {
         title="Admin"
         description="Edit website copy without changing code."
       />
-      <aside className="admin-nav">
-        <button
-          type="button"
-          className={panel === "site" ? "active" : ""}
-          onClick={() => setPanel("site")}
-        >
-          Site settings
-        </button>
-        <button
-          type="button"
-          className={panel === "home" ? "active" : ""}
-          onClick={() => setPanel("home")}
-        >
-          Home
-        </button>
-        <button
-          type="button"
-          className={panel === "about" ? "active" : ""}
-          onClick={() => setPanel("about")}
-        >
-          About
-        </button>
-        <button
-          type="button"
-          className={panel === "events" ? "active" : ""}
-          onClick={() => setPanel("events")}
-        >
-          Events
-        </button>
-        <button
-          type="button"
-          className={panel === "contact" ? "active" : ""}
-          onClick={() => setPanel("contact")}
-        >
-          Contact
-        </button>
-        <button
-          type="button"
-          className={panel === "terms" ? "active" : ""}
-          onClick={() => setPanel("terms")}
-        >
-          Terms
-        </button>
-        <button
-          type="button"
-          className={panel === "products" ? "active" : ""}
-          onClick={() => setPanel("products")}
-        >
-          Products
-        </button>
+      <button
+        type="button"
+        className="admin-nav-toggle"
+        aria-expanded={navOpen}
+        aria-controls="admin-nav"
+        onClick={() => setNavOpen((open) => !open)}
+      >
+        Menu
+      </button>
+      <aside
+        id="admin-nav"
+        className={navOpen ? "admin-nav is-open" : "admin-nav"}
+      >
+        {NAV_ITEMS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={panel === item.id ? "active" : ""}
+            onClick={() => selectPanel(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
         <a href="/" target="_blank" rel="noreferrer">
           View site
         </a>
@@ -152,13 +141,14 @@ export function AdminApp() {
             void logoutAdmin().then(() => {
               setAuthenticated(false);
               setContent(null);
+              setNavOpen(false);
             });
           }}
         >
           Sign out
         </button>
       </aside>
-      <div className="stack">
+      <div className="admin-main stack">
         {panel !== "products" ? (
           <div className="admin-toolbar">
             <p className="muted">

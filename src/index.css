@@ -152,8 +152,7 @@ p:last-child {
 
 .site-header__inner,
 .site-footer__inner,
-.page,
-.admin-shell {
+.page {
   width: min(var(--measure), calc(100% - 2.5rem));
   margin: 0 auto;
 }
@@ -1407,15 +1406,46 @@ p:last-child {
 
 .admin-shell {
   display: grid;
-  grid-template-columns: 15rem 1fr;
-  gap: 1.5rem;
-  padding: 1.5rem 0 4rem;
+  grid-template-columns: 12.5rem minmax(0, 1fr);
+  gap: 0;
+  width: 100%;
+  margin: 0;
+  min-height: 100vh;
+  padding: 0;
+  align-items: start;
+}
+
+.admin-nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+  border: 1px solid var(--rule);
+  border-radius: 0.6rem;
+  background: white;
+  color: var(--ink);
+  padding: 0.7rem 0.9rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-nav-toggle:hover {
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .admin-nav {
   display: grid;
   align-content: start;
-  gap: 0.4rem;
+  gap: 0.25rem;
+  position: sticky;
+  top: 0;
+  align-self: start;
+  min-height: 100vh;
+  padding: 0.85rem 0.55rem;
+  border-right: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--paper) 70%, #f7f4ee);
 }
 
 .admin-nav button,
@@ -1424,8 +1454,8 @@ p:last-child {
   background: transparent;
   color: var(--ink);
   border: 0;
-  border-radius: 0.6rem;
-  padding: 0.7rem 0.8rem;
+  border-radius: 0.5rem;
+  padding: 0.55rem 0.7rem;
   text-decoration: none;
 }
 
@@ -1446,11 +1476,16 @@ p:last-child {
   background: white;
 }
 
+.admin-main {
+  min-width: 0;
+  padding: 1.1rem 1.25rem 3rem;
+}
+
 .admin-panel {
   background: white;
   border: 1px solid var(--rule);
   border-radius: 1rem;
-  padding: 1.4rem;
+  padding: 1.25rem 1.35rem;
   display: grid;
   gap: 1.1rem;
 }
@@ -1581,6 +1616,46 @@ p:last-child {
   gap: 0.45rem;
 }
 
+.rich-text-field__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.rich-text-field__label {
+  font-size: 0.92rem;
+}
+
+.rich-text-mode-toggle {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.rich-text-mode-toggle button {
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--ink) !important;
+  box-shadow: none !important;
+  padding: 0.35rem 0.75rem !important;
+  font-size: 0.85rem !important;
+  font-weight: 600;
+}
+
+.rich-text-mode-toggle button + button {
+  border-left: 1px solid var(--rule) !important;
+}
+
+.rich-text-mode-toggle button.is-active {
+  background: var(--ink) !important;
+  color: var(--paper) !important;
+}
+
 .rich-text-toolbar {
   display: inline-flex;
   flex-wrap: wrap;
@@ -1601,6 +1676,28 @@ p:last-child {
 .rich-text-hint {
   margin: 0;
   font-size: 0.85rem;
+}
+
+.rich-text-preview {
+  min-height: 9rem;
+  border: 1px solid var(--rule);
+  border-radius: 0.6rem;
+  padding: 0.85rem 1rem;
+  background: #faf8f4;
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+}
+
+.rich-text-preview p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.rich-text-preview__empty {
+  margin: 0;
+  color: var(--ink-soft);
+  font-style: italic;
 }
 
 .card__header {
@@ -2042,7 +2139,6 @@ p:last-child {
   }
 
   .contact-layout,
-  .admin-shell,
   .testimonial--with-image,
   .site-footer__grid,
   .newsletter__names,
@@ -2054,6 +2150,42 @@ p:last-child {
   .combined-layout,
   .combined-layout--image-left {
     grid-template-columns: 1fr;
+  }
+
+  .admin-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+  }
+
+  .admin-nav-toggle {
+    display: inline-flex;
+    grid-column: 1;
+    grid-row: 1;
+    width: calc(100% - 1.5rem);
+    margin: 0.75rem 0.75rem 0;
+  }
+
+  .admin-nav {
+    grid-column: 1;
+    grid-row: 2;
+    position: static;
+    min-height: 0;
+    margin: 0.5rem 0.75rem 0;
+    padding: 0.55rem;
+    border: 1px solid var(--rule);
+    border-radius: 0.75rem;
+    background: white;
+    display: none;
+  }
+
+  .admin-nav.is-open {
+    display: grid;
+  }
+
+  .admin-main {
+    grid-column: 1;
+    grid-row: 3;
+    padding: 0.85rem 0.75rem 2.5rem;
   }
 
   .product-grid {

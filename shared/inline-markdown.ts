@@ -59,6 +59,39 @@ export function wrapInlineMarkdown(
   };
 }
 
+const LINK_MARKDOWN_RE = /^\[([^\]]*)\]\((https?:\/\/[^\s)]*)\)$/;
+
+/** Wrap selection as `[label](url)`. Pass `href` from a prompt or leave empty to place a placeholder URL. */
+export function wrapInlineLink(
+  value: string,
+  start: number,
+  end: number,
+  href = "https://",
+): { value: string; selectionStart: number; selectionEnd: number } {
+  const selected = value.slice(start, end);
+  const linkMatch = selected.match(LINK_MARKDOWN_RE);
+  if (linkMatch) {
+    const label = linkMatch[1];
+    const next = value.slice(0, start) + label + value.slice(end);
+    return {
+      value: next,
+      selectionStart: start,
+      selectionEnd: start + label.length,
+    };
+  }
+
+  const label = selected || "link text";
+  const url = href.trim() || "https://";
+  const wrapped = `[${label}](${url})`;
+  const next = value.slice(0, start) + wrapped + value.slice(end);
+  const urlStart = start + label.length + 3;
+  return {
+    value: next,
+    selectionStart: urlStart,
+    selectionEnd: urlStart + url.length,
+  };
+}
+
 export type InlineToken =
   | { kind: "text"; value: string }
   | { kind: "bold" | "italic" | "underline"; children: InlineToken[] }

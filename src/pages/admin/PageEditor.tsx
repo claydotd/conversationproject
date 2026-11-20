@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from "react";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { useRef, useState } from "react";
 import {
   COMBINE_SIDE_LABELS,
@@ -13,7 +13,13 @@ import {
   SECTION_TYPE_LABELS,
   TEXT_ALIGN_LABELS,
 } from "@shared/page-sections";
-import { wrapInlineMarkdown, type InlineMark } from "@shared/inline-markdown";
+import {
+  parseInlineMarkdown,
+  wrapInlineLink,
+  wrapInlineMarkdown,
+  type InlineMark,
+  type InlineToken,
+} from "@shared/inline-markdown";
 import {
   ADDABLE_SECTION_TYPES,
   COMBINE_SIDES,
@@ -330,6 +336,35 @@ function OptionPicker<T extends string>({
   );
 }
 
+function renderPreviewToken(token: InlineToken, key: string): ReactNode {
+  if (token.kind === "text") return <span key={key}>{token.value}</span>;
+  const nested = token.children.map((child, index) =>
+    renderPreviewToken(child, `${key}-${index}`),
+  );
+  if (token.kind === "bold") return <strong key={key}>{nested}</strong>;
+  if (token.kind === "italic") return <em key={key}>{nested}</em>;
+  if (token.kind === "link") {
+    return (
+      <a
+        key={key}
+        className="text-link"
+        href={token.href}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {nested}
+      </a>
+    );
+  }
+  return <u key={key}>{nested}</u>;
+}
+
+function renderPreviewInline(text: string, keyPrefix: string): ReactNode[] {
+  return parseInlineMarkdown(text).map((token, index) =>
+    renderPreviewToken(token, `${keyPrefix}-${index}`),
+  );
+}
+
 function RichTextBodyField({
   value,
   onChange,
@@ -338,13 +373,20 @@ function RichTextBodyField({
   onChange: (value: string) => void;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [mode, setMode] = useState<"code" | "preview">("code");
 
-  function applyMark(mark: InlineMark) {
+  function applySelection(
+    transform: (
+      current: string,
+      start: number,
+      end: number,
+    ) => { value: string; selectionStart: number; selectionEnd: number },
+  ) {
     const textarea = textareaRef.current;
     if (!textarea) return;
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const next = wrapInlineMarkdown(value, start, end, mark);
+    const next = transform(value, start, end);
     onChange(next.value);
     requestAnimationFrame(() => {
       textarea.focus();
@@ -352,46 +394,145 @@ function RichTextBodyField({
     });
   }
 
+  function applyMark(mark: InlineMark) {
+    applySelection((current, start, end) =>
+      wrapInlineMarkdown(current, start, end, mark),
+    );
+  }
+
+  function applyLink() {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = value.slice(start, end);
+    const isExistingLink = /^\[([^\]]*)\]\((https?:\/\/[^\s)]*)\)$/.test(
+      selected,
+    );
+    if (isExistingLink) {
+      const next = wrapInlineLink(value, start, end);
+      onChange(next.value);
+      requestAnimationFrame(() => {
+        textarea.focus();
+        textarea.setSelectionRange(next.selectionStart, next.selectionEnd);
+      });
+      return;
+    }
+
+    const entered = window.prompt("Link URL", "https://");
+    if (entered === null) return;
+    const href = entered.trim() || "https://";
+    const next = wrapInlineLink(value, start, end, href);
+    onChange(next.value);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(next.selectionStart, next.selectionEnd);
+    });
+  }
+
+  const trimmed = value.trim();
+
   return (
     <div className="rich-text-field">
-      <div className="rich-text-toolbar" role="toolbar" aria-label="Text style">
-        <button
-          type="button"
-          className="ghost rich-text-toolbar__btn"
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={() => applyMark("bold")}
+      <div className="rich-text-field__header">
+        <span className="rich-text-field__label">Paragraph</span>
+        <div
+          className="rich-text-mode-toggle"
+          role="group"
+          aria-label="Editor mode"
         >
-          <strong>B</strong>
-        </button>
-        <button
-          type="button"
-          className="ghost rich-text-toolbar__btn"
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={() => applyMark("italic")}
-        >
-          <em>I</em>
-        </button>
-        <button
-          type="button"
-          className="ghost rich-text-toolbar__btn"
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={() => applyMark("underline")}
-        >
-          <span className="rich-text-toolbar__underline">U</span>
-        </button>
+          <button
+            type="button"
+            className={mode === "code" ? "is-active" : ""}
+            aria-pressed={mode === "code"}
+            onClick={() => setMode("code")}
+          >
+            Code
+          </button>
+          <button
+            type="button"
+            className={mode === "preview" ? "is-active" : ""}
+            aria-pressed={mode === "preview"}
+            onClick={() => setMode("preview")}
+          >
+            Preview
+          </button>
+        </div>
       </div>
-      <label>
-        Paragraph
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-        />
-      </label>
-      <p className="muted rich-text-hint">
-        Select text, then use the buttons for bold, italic, or underline. Links:
-        [label](https://example.com)
-      </p>
+      {mode === "code" ? (
+        <>
+          <div
+            className="rich-text-toolbar"
+            role="toolbar"
+            aria-label="Text style"
+          >
+            <button
+              type="button"
+              className="ghost rich-text-toolbar__btn"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => applyMark("bold")}
+            >
+              <strong>B</strong>
+            </button>
+            <button
+              type="button"
+              className="ghost rich-text-toolbar__btn"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => applyMark("italic")}
+            >
+              <em>I</em>
+            </button>
+            <button
+              type="button"
+              className="ghost rich-text-toolbar__btn"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => applyMark("underline")}
+            >
+              <span className="rich-text-toolbar__underline">U</span>
+            </button>
+            <button
+              type="button"
+              className="ghost rich-text-toolbar__btn"
+              title="Insert link"
+              aria-label="Insert link"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={applyLink}
+            >
+              Link
+            </button>
+          </div>
+          <textarea
+            ref={textareaRef}
+            aria-label="Paragraph"
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+          />
+          <p className="muted rich-text-hint">
+            Select text, then use the buttons for bold, italic, underline, or
+            link.
+          </p>
+        </>
+      ) : (
+        <div className="rich-text-preview" aria-live="polite">
+          {trimmed
+            ? value.split(/\n{2,}/).map((paragraph, index) => (
+                <p key={`preview-${index}`}>
+                  {paragraph.split("\n").map((line, lineIndex, lines) => (
+                    <span key={`preview-${index}-l${lineIndex}`}>
+                      {renderPreviewInline(
+                        line,
+                        `preview-${index}-l${lineIndex}`,
+                      )}
+                      {lineIndex < lines.length - 1 ? <br /> : null}
+                    </span>
+                  ))}
+                </p>
+              ))
+            : (
+                <p className="rich-text-preview__empty">Nothing to preview yet.</p>
+              )}
+        </div>
+      )}
     </div>
   );
 }
