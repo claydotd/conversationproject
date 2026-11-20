@@ -1,3 +1,4 @@
+import { DEFAULT_EVENTBRITE_ORGANIZER_PAGE_URL } from "./events";
 import { PAGE_SLUGS, type PageContent, type PageSlug, type SiteContent } from "./types";
 
 function emptyPage(slug: PageSlug): PageContent {
@@ -269,30 +270,11 @@ const events: PageContent = {
   title: "Events",
   sections: [
     {
-      id: "events-hero",
-      type: "hero",
-      background: "default",
-      eyebrow: "Events",
-      heading: "Come and sit in a room with us.",
-      subheading:
-        "Upcoming gatherings from The Conversation Project. Booking and full details live on Eventbrite.",
-      eyebrowColor: "default",
-      headingColor: "default",
-      subheadingColor: "default",
-      imageUrl: "",
-      imageAlt: "",
-      imageDimension: "landscape",
-      imageOverlay: false,
-      linkMode: "none",
-      customLinkLabel: "",
-      customLinkUrl: "",
-    },
-    {
       id: "events-intro",
       type: "text",
-      background: "default",
-      heading: "What to expect",
-      body: "These are relaxed, structured conversations — not networking, not a lecture. A few prompts, a room of people willing to talk, and enough time to say the thing that usually stays unsaid.\n\nChoose an upcoming date below. Each card takes you to Eventbrite for tickets and the practical details.",
+      background: "light-background",
+      heading: "Events",
+      body: `For more information about our upcoming events, [visit our Eventbrite page](${DEFAULT_EVENTBRITE_ORGANIZER_PAGE_URL})`,
       headingAlign: "left",
       bodyAlign: "left",
     },

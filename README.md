@@ -34,6 +34,6 @@ The **Events** page intro is editable in admin. The listing itself is loaded fro
 - Physical items (card deck) require a shipping address at checkout; fulfilment is manual
 - **Required env:** `PUBLIC_SITE_URL` (absolute site URL, Functions scope), plus SumUp and Resend vars from `.env.example`
 - After payment, SumUp notifies `POST /api/checkout/webhook`, which marks the order paid and sends Resend emails (buyer receipt + owner notification to the **contact email** in Admin → Site settings). `/shop/success` also polls `/api/checkout/confirm` as a backup
-- Order emails only send once the order is `paid`. If an order is stuck `pending` after a real SumUp payment, open `/shop/success?ref=<checkout_reference>` (or call confirm) after deploy to fulfill it
+- Order emails only send once the order is `paid`. If an order is stuck `pending` after a real SumUp payment, open `/shop/success?ref=…` with either `orders.sumup_checkout_reference` or `orders.sumup_checkout_id` (or call confirm) after deploy to fulfill it
 - Buyers re-download digital files at `/downloads` by entering the order email
 - Upload digital files in **Admin → Products** (PDF/ZIP up to 5MB), or attach external download links for larger files

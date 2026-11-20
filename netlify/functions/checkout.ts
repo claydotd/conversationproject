@@ -9,6 +9,7 @@ import { errorJson, json } from "../lib/http";
 import {
   createPendingOrder,
   findOrderByCheckoutReference,
+  findOrderBySumupCheckoutId,
   markOrderFailed,
   setOrderCheckoutId,
   type OrderRecord,
@@ -202,7 +203,10 @@ async function handleConfirmCheckout(req: Request) {
     return errorJson("Missing checkout reference.");
   }
 
-  const order = await findOrderByCheckoutReference(checkoutReference);
+  // Success URL uses sumup_checkout_reference; recovery may use SumUp's checkout id.
+  const order =
+    (await findOrderByCheckoutReference(checkoutReference)) ??
+    (await findOrderBySumupCheckoutId(checkoutReference));
   if (!order) {
     return errorJson("Order not found.", 404);
   }

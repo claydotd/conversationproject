@@ -686,6 +686,24 @@ p:last-child {
   text-underline-offset: 0.15em;
 }
 
+.prose .text-link {
+  color: var(--accent-deep);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.prose .text-link:hover {
+  color: var(--ink);
+}
+
+.page-stack > *:has(+ .events-section) {
+  padding-bottom: 1.25rem;
+}
+
+.page-stack > * + .events-section {
+  padding-top: 0.75rem;
+}
+
 .page-stack > :first-child {
   padding-top: var(--section-pad-y-first);
 }

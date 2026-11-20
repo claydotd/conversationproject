@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { DEFAULT_EVENTBRITE_ORGANIZER_PAGE_URL } from "@shared/events";
 import type {
   GalleryImage,
   ImageSection,
@@ -8,13 +9,31 @@ import type {
   TextAlign,
 } from "@shared/types";
 import { sectionColorVar, sectionSurfaceClass } from "@shared/page-sections";
-import { parseInlineMarkdown } from "@shared/inline-markdown";
+import {
+  parseInlineMarkdown,
+  type InlineToken,
+} from "@shared/inline-markdown";
 import { revealDelayForIndex, useReveal } from "../hooks/useReveal";
 import { ContactForm } from "./ContactForm";
 import { EventList } from "./EventList";
 import { PageHero, HeroActions } from "./PageHero";
 import { SocialLinks } from "./SocialLinks";
 import { TestimonialsClothesline } from "./TestimonialSection";
+
+const EVENTBRITE_PAGE_PHRASE = "visit our Eventbrite page";
+
+function withEventbritePageLink(body: string): string {
+  if (
+    !body.includes(EVENTBRITE_PAGE_PHRASE) ||
+    body.includes(`[${EVENTBRITE_PAGE_PHRASE}](`)
+  ) {
+    return body;
+  }
+  return body.replaceAll(
+    EVENTBRITE_PAGE_PHRASE,
+    `[${EVENTBRITE_PAGE_PHRASE}](${DEFAULT_EVENTBRITE_ORGANIZER_PAGE_URL})`,
+  );
+}
 
 type SectionCluster =
   | { kind: "section"; section: PageSection }
@@ -67,16 +86,26 @@ function clusterSections(sections: PageSection[]): SectionCluster[] {
   return clusters;
 }
 
-function renderInlineToken(
-  token: ReturnType<typeof parseInlineMarkdown>[number],
-  key: string,
-): ReactNode {
+function renderInlineToken(token: InlineToken, key: string): ReactNode {
   if (token.kind === "text") return <span key={key}>{token.value}</span>;
   const nested = token.children.map((child, index) =>
     renderInlineToken(child, `${key}-${index}`),
   );
   if (token.kind === "bold") return <strong key={key}>{nested}</strong>;
   if (token.kind === "italic") return <em key={key}>{nested}</em>;
+  if (token.kind === "link") {
+    return (
+      <a
+        key={key}
+        className="text-link"
+        href={token.href}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {nested}
+      </a>
+    );
+  }
   return <u key={key}>{nested}</u>;
 }
 
@@ -87,7 +116,8 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
 }
 
 function paragraphs(text: string, id: string) {
-  return text.split(/\n{2,}/).map((paragraph, index) => (
+  const body = withEventbritePageLink(text);
+  return body.split(/\n{2,}/).map((paragraph, index) => (
     <p key={`${id}-${index}`}>
       {paragraph.split("\n").map((line, lineIndex, lines) => (
         <span key={`${id}-${index}-l${lineIndex}`}>

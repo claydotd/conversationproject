@@ -389,7 +389,8 @@ function RichTextBodyField({
         />
       </label>
       <p className="muted rich-text-hint">
-        Select text, then use the buttons for bold, italic, or underline.
+        Select text, then use the buttons for bold, italic, or underline. Links:
+        [label](https://example.com)
       </p>
     </div>
   );

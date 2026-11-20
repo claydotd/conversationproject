@@ -1,4 +1,4 @@
-/** Minimal inline markdown: **bold**, *italic*, __underline__. */
+/** Minimal inline markdown: **bold**, *italic*, __underline__, [label](url). */
 
 export type InlineMark = "bold" | "italic" | "underline";
 
@@ -59,12 +59,15 @@ export function wrapInlineMarkdown(
   };
 }
 
-type Token =
+export type InlineToken =
   | { kind: "text"; value: string }
-  | { kind: "bold" | "italic" | "underline"; children: Token[] };
+  | { kind: "bold" | "italic" | "underline"; children: InlineToken[] }
+  | { kind: "link"; href: string; children: InlineToken[] };
 
-function tokenize(input: string): Token[] {
-  const tokens: Token[] = [];
+const LINK_RE = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+
+function tokenizeMarks(input: string): InlineToken[] {
+  const tokens: InlineToken[] = [];
   let i = 0;
 
   while (i < input.length) {
@@ -73,7 +76,7 @@ function tokenize(input: string): Token[] {
       if (close !== -1) {
         tokens.push({
           kind: "bold",
-          children: tokenize(input.slice(i + 2, close)),
+          children: tokenizeMarks(input.slice(i + 2, close)),
         });
         i = close + 2;
         continue;
@@ -85,7 +88,7 @@ function tokenize(input: string): Token[] {
       if (close !== -1) {
         tokens.push({
           kind: "underline",
-          children: tokenize(input.slice(i + 2, close)),
+          children: tokenizeMarks(input.slice(i + 2, close)),
         });
         i = close + 2;
         continue;
@@ -97,7 +100,7 @@ function tokenize(input: string): Token[] {
       if (close !== -1) {
         tokens.push({
           kind: "italic",
-          children: tokenize(input.slice(i + 1, close)),
+          children: tokenizeMarks(input.slice(i + 1, close)),
         });
         i = close + 1;
         continue;
@@ -122,6 +125,30 @@ function tokenize(input: string): Token[] {
   return tokens;
 }
 
-export function parseInlineMarkdown(text: string): Token[] {
+function tokenize(input: string): InlineToken[] {
+  const tokens: InlineToken[] = [];
+  let lastIndex = 0;
+
+  for (const match of input.matchAll(LINK_RE)) {
+    const index = match.index ?? 0;
+    if (index > lastIndex) {
+      tokens.push(...tokenizeMarks(input.slice(lastIndex, index)));
+    }
+    tokens.push({
+      kind: "link",
+      href: match[2],
+      children: tokenizeMarks(match[1]),
+    });
+    lastIndex = index + match[0].length;
+  }
+
+  if (lastIndex < input.length) {
+    tokens.push(...tokenizeMarks(input.slice(lastIndex)));
+  }
+
+  return tokens;
+}
+
+export function parseInlineMarkdown(text: string): InlineToken[] {
   return tokenize(text);
 }

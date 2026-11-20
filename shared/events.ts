@@ -1,5 +1,8 @@
 export const DEFAULT_EVENTBRITE_ORGANIZER_ID = "114391829571";
 
+/** Public Eventbrite organizer profile for this project. */
+export const DEFAULT_EVENTBRITE_ORGANIZER_PAGE_URL = `https://www.eventbrite.com/o/${DEFAULT_EVENTBRITE_ORGANIZER_ID}`;
+
 /** Only current/upcoming statuses — past Eventbrite events are not listed on the site. */
 export const PUBLIC_EVENT_STATUSES = ["live", "started"] as const;
 
