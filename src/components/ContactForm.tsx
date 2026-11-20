@@ -50,7 +50,11 @@ export function ContactForm({
   }
 
   return (
-    <section className={["section", surface].filter(Boolean).join(" ")}>
+    <section
+      className={["section", "contact-form-section", surface]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <div className="page">
         <div
           className={["contact-layout", reveal.className]

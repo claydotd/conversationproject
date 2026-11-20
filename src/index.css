@@ -701,6 +701,14 @@ p:last-child {
   padding-top: 0.75rem;
 }
 
+.page-stack > *:has(+ .contact-form-section) {
+  padding-bottom: 1.25rem;
+}
+
+.page-stack > * + .contact-form-section {
+  padding-top: 0.75rem;
+}
+
 .page-stack > :first-child {
   padding-top: var(--section-pad-y-first);
 }
@@ -1103,7 +1111,8 @@ p:last-child {
   flex-shrink: 0;
   width: 1.15rem;
   height: 1.15rem;
-  display: block;
+  font-size: 1.15rem;
+  line-height: 1;
 }
 
 .section-bg--inverse .social-links__button {
@@ -1873,6 +1882,14 @@ p:last-child {
 
 .shop-page > .section:first-child {
   padding-top: var(--section-pad-y-first);
+}
+
+.shop-page > .shop-intro {
+  padding-bottom: 1.25rem;
+}
+
+.shop-page > .shop-intro + .section {
+  padding-top: 0.75rem;
 }
 
 .shop-intro .eyebrow,
