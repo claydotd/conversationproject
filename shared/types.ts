@@ -98,6 +98,8 @@ export interface SiteSettings {
   newsletterHeading: string;
   newsletterParagraph: string;
   newsletterConsentLabel: string;
+  /** Flat shipping charge for physical orders, in pence. */
+  shippingCents: number;
   social: SocialLink[];
 }
 

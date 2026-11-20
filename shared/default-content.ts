@@ -1,4 +1,5 @@
 import { DEFAULT_EVENTBRITE_ORGANIZER_PAGE_URL } from "./events";
+import { DEFAULT_SHIPPING_CENTS } from "./shop";
 import { PAGE_SLUGS, type PageContent, type PageSlug, type SiteContent } from "./types";
 
 function emptyPage(slug: PageSlug): PageContent {
@@ -23,6 +24,7 @@ export const emptyContent: SiteContent = {
     newsletterHeading: "",
     newsletterParagraph: "",
     newsletterConsentLabel: "",
+    shippingCents: DEFAULT_SHIPPING_CENTS,
     social: [],
   },
   pages: Object.fromEntries(
@@ -302,6 +304,7 @@ export const defaultContent: SiteContent = {
       "Sign up with your email address to receive news and updates on upcoming workshops.",
     newsletterConsentLabel:
       "I consent to receiving news and updates by email.",
+    shippingCents: DEFAULT_SHIPPING_CENTS,
     social: [],
   },
   pages: {

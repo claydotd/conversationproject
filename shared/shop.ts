@@ -45,6 +45,41 @@ export interface ShippingAddress {
   country: string;
 }
 
+/** Default flat UK shipping charge in pence (£5.00). */
+export const DEFAULT_SHIPPING_CENTS = 500;
+
+export const UK_SHIPPING_COUNTRY = "United Kingdom";
+
+const UK_COUNTRY_ALIASES = new Set([
+  "united kingdom",
+  "uk",
+  "u.k.",
+  "u.k",
+  "great britain",
+  "britain",
+  "gb",
+  "england",
+  "scotland",
+  "wales",
+  "northern ireland",
+]);
+
+/** UK outward+inward postcode, optional space. */
+const UK_POSTCODE_PATTERN =
+  /^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/i;
+
+export function isUkCountry(country: string): boolean {
+  return UK_COUNTRY_ALIASES.has(country.trim().toLowerCase());
+}
+
+export function isUkPostcode(postcode: string): boolean {
+  return UK_POSTCODE_PATTERN.test(postcode.trim());
+}
+
+export function normalizeUkShippingCountry(country: string): string | null {
+  return isUkCountry(country) ? UK_SHIPPING_COUNTRY : null;
+}
+
 export interface CheckoutRequest {
   email: string;
   items: CartItemInput[];

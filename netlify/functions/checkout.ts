@@ -1,5 +1,12 @@
 import type { Config, Context } from "@netlify/functions";
-import type { CheckoutRequest, ShippingAddress } from "../../shared/shop";
+import {
+  isUkPostcode,
+  normalizeUkShippingCountry,
+  UK_SHIPPING_COUNTRY,
+  type CheckoutRequest,
+  type ShippingAddress,
+} from "../../shared/shop";
+import { getShippingCents } from "../lib/content";
 import { getEnv } from "../lib/env";
 import {
   fulfillCheckoutBySumupId,
@@ -45,9 +52,12 @@ function normalizeShipping(
   const name = String(value.name ?? "").trim();
   const line1 = String(value.line1 ?? "").trim();
   const city = String(value.city ?? "").trim();
-  const postcode = String(value.postcode ?? "").trim();
-  const country = String(value.country ?? "").trim();
+  const postcode = String(value.postcode ?? "").trim().toUpperCase();
+  const country = normalizeUkShippingCountry(String(value.country ?? ""));
   if (!name || !line1 || !city || !postcode || !country) {
+    return null;
+  }
+  if (!isUkPostcode(postcode)) {
     return null;
   }
   return {
@@ -56,7 +66,7 @@ function normalizeShipping(
     line2: String(value.line2 ?? "").trim(),
     city,
     postcode,
-    country,
+    country: UK_SHIPPING_COUNTRY,
   };
 }
 
@@ -125,18 +135,30 @@ async function handleCreateCheckout(req: Request) {
   const needsShipping = lineItems.some((item) => item.kind === "physical");
   const shipping = normalizeShipping(body.shipping);
   if (needsShipping && !shipping) {
+    const country = String(body.shipping?.country ?? "").trim();
+    if (country && !normalizeUkShippingCountry(country)) {
+      return errorJson(
+        "We only ship within the United Kingdom. Please enter a UK address.",
+      );
+    }
+    const postcode = String(body.shipping?.postcode ?? "").trim();
+    if (postcode && !isUkPostcode(postcode)) {
+      return errorJson("Please enter a valid UK postcode.");
+    }
     return errorJson(
-      "A complete shipping address is required for physical products.",
+      "A complete UK shipping address is required for physical products.",
     );
   }
 
   const currency = lineItems[0]
     ? (byId.get(lineItems[0].productId)?.currency ?? "GBP")
     : "GBP";
-  const totalCents = lineItems.reduce(
+  const itemsTotalCents = lineItems.reduce(
     (sum, item) => sum + item.unitPriceCents * item.quantity,
     0,
   );
+  const shippingCents = needsShipping ? await getShippingCents() : 0;
+  const totalCents = itemsTotalCents + shippingCents;
   if (totalCents < 1) {
     return errorJson("Order total must be greater than zero.");
   }
@@ -146,13 +168,17 @@ async function handleCreateCheckout(req: Request) {
     email,
     currency,
     totalCents,
+    shippingCents,
     checkoutReference,
     shipping: needsShipping ? shipping : null,
     items: lineItems,
   });
 
-  const description = lineItems
-    .map((item) => `${item.name} × ${item.quantity}`)
+  const description = [
+    ...lineItems.map((item) => `${item.name} × ${item.quantity}`),
+    shippingCents > 0 ? "Shipping" : null,
+  ]
+    .filter(Boolean)
     .join(", ");
 
   try {

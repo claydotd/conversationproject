@@ -21,6 +21,7 @@ export interface OrderRecord {
   status: OrderStatus;
   currency: string;
   totalCents: number;
+  shippingCents: number;
   shipping: ShippingAddress | null;
   sumupCheckoutId: string | null;
   sumupCheckoutReference: string;
@@ -34,6 +35,7 @@ interface OrderRow {
   status: OrderStatus;
   currency: string;
   total_cents: number | string;
+  shipping_cents: number | string | null;
   shipping_name: string | null;
   shipping_line1: string | null;
   shipping_line2: string | null;
@@ -100,6 +102,7 @@ function attachItems(
     status: row.status,
     currency: row.currency,
     totalCents: Number(row.total_cents),
+    shippingCents: Number(row.shipping_cents) || 0,
     shipping: mapShipping(row),
     sumupCheckoutId: row.sumup_checkout_id,
     sumupCheckoutReference: row.sumup_checkout_reference,
@@ -112,6 +115,7 @@ export interface CreateOrderInput {
   email: string;
   currency: string;
   totalCents: number;
+  shippingCents: number;
   checkoutReference: string;
   shipping: ShippingAddress | null;
   items: Array<{
@@ -132,12 +136,12 @@ export async function createPendingOrder(
     await client.query("BEGIN");
     const orderResult = await client.query(
       `INSERT INTO orders (
-        email, status, currency, total_cents,
+        email, status, currency, total_cents, shipping_cents,
         shipping_name, shipping_line1, shipping_line2,
         shipping_city, shipping_postcode, shipping_country,
         sumup_checkout_reference
-      ) VALUES ($1,'pending',$2,$3,$4,$5,$6,$7,$8,$9,$10)
-      RETURNING id, email, status, currency, total_cents,
+      ) VALUES ($1,'pending',$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+      RETURNING id, email, status, currency, total_cents, shipping_cents,
         shipping_name, shipping_line1, shipping_line2,
         shipping_city, shipping_postcode, shipping_country,
         sumup_checkout_id, sumup_checkout_reference, receipt_sent_at`,
@@ -145,6 +149,7 @@ export async function createPendingOrder(
         input.email.trim().toLowerCase(),
         input.currency,
         input.totalCents,
+        input.shippingCents,
         input.shipping?.name ?? null,
         input.shipping?.line1 ?? null,
         input.shipping?.line2 ?? null,
@@ -193,7 +198,7 @@ export async function setOrderCheckoutId(
   `;
 }
 
-const ORDER_SELECT = `id, email, status, currency, total_cents,
+const ORDER_SELECT = `id, email, status, currency, total_cents, shipping_cents,
   shipping_name, shipping_line1, shipping_line2,
   shipping_city, shipping_postcode, shipping_country,
   sumup_checkout_id, sumup_checkout_reference, receipt_sent_at`;
@@ -203,7 +208,7 @@ export async function findOrderByCheckoutReference(
 ): Promise<OrderRecord | null> {
   const db = getDb();
   const rows = await db.sql`
-    SELECT id, email, status, currency, total_cents,
+    SELECT id, email, status, currency, total_cents, shipping_cents,
            shipping_name, shipping_line1, shipping_line2,
            shipping_city, shipping_postcode, shipping_country,
            sumup_checkout_id, sumup_checkout_reference, receipt_sent_at
@@ -222,7 +227,7 @@ export async function findOrderBySumupCheckoutId(
 ): Promise<OrderRecord | null> {
   const db = getDb();
   const rows = await db.sql`
-    SELECT id, email, status, currency, total_cents,
+    SELECT id, email, status, currency, total_cents, shipping_cents,
            shipping_name, shipping_line1, shipping_line2,
            shipping_city, shipping_postcode, shipping_country,
            sumup_checkout_id, sumup_checkout_reference, receipt_sent_at
@@ -242,7 +247,7 @@ export async function markOrderPaid(orderId: string): Promise<OrderRecord | null
     UPDATE orders
     SET status = 'paid', updated_at = NOW()
     WHERE id = ${orderId} AND status <> 'paid'
-    RETURNING id, email, status, currency, total_cents,
+    RETURNING id, email, status, currency, total_cents, shipping_cents,
       shipping_name, shipping_line1, shipping_line2,
       shipping_city, shipping_postcode, shipping_country,
       sumup_checkout_id, sumup_checkout_reference, receipt_sent_at
@@ -250,7 +255,7 @@ export async function markOrderPaid(orderId: string): Promise<OrderRecord | null
   let row = rows[0] as OrderRow | undefined;
   if (!row) {
     const existing = await db.sql`
-      SELECT id, email, status, currency, total_cents,
+      SELECT id, email, status, currency, total_cents, shipping_cents,
              shipping_name, shipping_line1, shipping_line2,
              shipping_city, shipping_postcode, shipping_country,
              sumup_checkout_id, sumup_checkout_reference, receipt_sent_at

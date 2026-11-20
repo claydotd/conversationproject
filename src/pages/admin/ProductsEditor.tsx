@@ -1,19 +1,33 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type FormEvent,
+  type SetStateAction,
+} from "react";
+import {
+  DEFAULT_SHIPPING_CENTS,
   formatPricePounds,
   slugifyProductName,
   type Product,
   type ProductDownload,
   type ProductKind,
 } from "@shared/shop";
+import type { SiteContent } from "@shared/types";
 import {
   createAdminProduct,
   deleteAdminProduct,
   fetchAdminProducts,
+  saveAdminContent,
   updateAdminProduct,
   uploadAdminProductFile,
 } from "../../lib/api";
 import { AdminImageFileInput } from "../../components/AdminImageFileInput";
+
+function poundsFromCents(cents: number): string {
+  return (cents / 100).toFixed(2);
+}
 
 interface Draft {
   id?: string;
@@ -103,7 +117,13 @@ function downloadSummary(download: ProductDownload): string {
   return download.blobKey ? `File: ${download.blobKey}` : "Uploaded file";
 }
 
-export function ProductsEditor() {
+export function ProductsEditor({
+  content,
+  setContent,
+}: {
+  content: SiteContent;
+  setContent: Dispatch<SetStateAction<SiteContent>>;
+}) {
   const [products, setProducts] = useState<Product[]>([]);
   const [draft, setDraft] = useState<Draft>(toDraft());
   const [externalDraft, setExternalDraft] = useState<ExternalDraft>({
@@ -113,6 +133,10 @@ export function ProductsEditor() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingShipping, setSavingShipping] = useState(false);
+  const [shippingPounds, setShippingPounds] = useState(
+    poundsFromCents(content.site.shippingCents ?? DEFAULT_SHIPPING_CENTS),
+  );
   const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -127,11 +151,48 @@ export function ProductsEditor() {
     void reload()
       .catch((error: unknown) => {
         setStatus(
-          error instanceof Error ? error.message : "Unable to load products.",
+          error instanceof Error ? error.message : "Unable to load shop.",
         );
       })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    setShippingPounds(
+      poundsFromCents(content.site.shippingCents ?? DEFAULT_SHIPPING_CENTS),
+    );
+  }, [content.site.shippingCents]);
+
+  async function onSaveShipping() {
+    const pounds = Number(shippingPounds);
+    if (!Number.isFinite(pounds) || pounds < 0) {
+      setStatus("Enter a valid shipping cost in pounds.");
+      return;
+    }
+    const shippingCents = Math.round(pounds * 100);
+    setSavingShipping(true);
+    setStatus("");
+    try {
+      const saved = await saveAdminContent({
+        ...content,
+        site: {
+          ...content.site,
+          shippingCents,
+        },
+      });
+      setContent(saved);
+      setShippingPounds(poundsFromCents(saved.site.shippingCents));
+      setStatus("Shipping settings saved and published.");
+    } catch (error) {
+      setStatus(
+        error instanceof Error
+          ? error.message
+          : "Unable to save shipping settings.",
+      );
+    } finally {
+      setSavingShipping(false);
+    }
+  }
 
   function scrollToForm() {
     window.requestAnimationFrame(() => {
@@ -268,17 +329,44 @@ export function ProductsEditor() {
   return (
     <div className="admin-panel stack">
       <div className="admin-toolbar">
-        <h1>Products</h1>
+        <h1>Shop</h1>
         <button type="button" className="ghost" onClick={startNewProduct}>
           New product
         </button>
       </div>
       <p className="muted">
-        Changes save immediately to the database. Published products appear in
-        the public shop.
+        Product changes save immediately to the database. Published products
+        appear in the public shop. Shipping settings publish with Save.
       </p>
       {status ? <p className="banner">{status}</p> : null}
-      {loading ? <p className="muted">Loading products…</p> : null}
+      {loading ? <p className="muted">Loading shop…</p> : null}
+
+      {!loading ? (
+        <div className="card field-grid">
+          <div className="card__header">
+            <h2>Shipping</h2>
+            <button
+              type="button"
+              disabled={savingShipping}
+              onClick={() => void onSaveShipping()}
+            >
+              {savingShipping ? "Saving…" : "Save shipping"}
+            </button>
+          </div>
+          <p className="muted">
+            Flat UK shipping is added at checkout when an order includes a
+            physical product. Orders are only accepted with a UK address.
+          </p>
+          <label>
+            Shipping cost (£)
+            <input
+              inputMode="decimal"
+              value={shippingPounds}
+              onChange={(event) => setShippingPounds(event.target.value)}
+            />
+          </label>
+        </div>
+      ) : null}
 
       {!loading ? (
         <div className="stack">

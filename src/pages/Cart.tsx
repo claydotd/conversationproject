@@ -4,9 +4,11 @@ import { formatPricePounds, type Product } from "@shared/shop";
 import { Seo } from "../components/Seo";
 import { fetchProducts } from "../lib/api";
 import { useCart } from "../lib/cart-context";
+import { useSiteContent } from "../lib/content-context";
 
 export function CartPage() {
   const { items, setQuantity, removeItem, itemCount } = useCart();
+  const { content } = useSiteContent();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -49,10 +51,14 @@ export function CartPage() {
       Boolean(line),
     );
 
-  const totalCents = lines.reduce(
+  const needsShipping = lines.some(({ product }) => product.kind === "physical");
+  const shippingCents = needsShipping ? content.site.shippingCents : 0;
+  const itemsTotalCents = lines.reduce(
     (sum, line) => sum + line.product.priceCents * line.item.quantity,
     0,
   );
+  const totalCents = itemsTotalCents + shippingCents;
+  const currency = lines[0]?.product.currency ?? "GBP";
 
   return (
     <div className="page shop-page">
@@ -119,11 +125,14 @@ export function CartPage() {
               ))}
             </ul>
             <aside className="cart-summary">
+              {needsShipping ? (
+                <p className="muted">
+                  Shipping (UK) {formatPricePounds(shippingCents, currency)}
+                </p>
+              ) : null}
               <p>
                 Total{" "}
-                <strong>
-                  {formatPricePounds(totalCents, lines[0]?.product.currency)}
-                </strong>
+                <strong>{formatPricePounds(totalCents, currency)}</strong>
               </p>
               <Link className="button-link" to="/shop/checkout">
                 Checkout

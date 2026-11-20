@@ -1,13 +1,20 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { formatPricePounds, type Product } from "@shared/shop";
+import {
+  formatPricePounds,
+  isUkPostcode,
+  UK_SHIPPING_COUNTRY,
+  type Product,
+} from "@shared/shop";
 import { Seo } from "../components/Seo";
 import { fetchProducts, startCheckout } from "../lib/api";
 import { useCart } from "../lib/cart-context";
+import { useSiteContent } from "../lib/content-context";
 
 export function CheckoutPage() {
   const navigate = useNavigate();
   const { items, itemCount } = useCart();
+  const { content } = useSiteContent();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -19,7 +26,7 @@ export function CheckoutPage() {
     line2: "",
     city: "",
     postcode: "",
-    country: "United Kingdom",
+    country: UK_SHIPPING_COUNTRY,
   });
 
   useEffect(() => {
@@ -61,14 +68,21 @@ export function CheckoutPage() {
     );
 
   const needsShipping = lines.some(({ product }) => product.kind === "physical");
-  const totalCents = lines.reduce(
+  const shippingCents = needsShipping ? content.site.shippingCents : 0;
+  const itemsTotalCents = lines.reduce(
     (sum, line) => sum + line.product.priceCents * line.item.quantity,
     0,
   );
+  const totalCents = itemsTotalCents + shippingCents;
+  const currency = lines[0]?.product.currency ?? "GBP";
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (lines.length === 0) return;
+    if (needsShipping && !isUkPostcode(shipping.postcode)) {
+      setError("Please enter a valid UK postcode.");
+      return;
+    }
     setSubmitting(true);
     setError("");
     try {
@@ -78,7 +92,9 @@ export function CheckoutPage() {
           productId: item.productId,
           quantity: item.quantity,
         })),
-        shipping: needsShipping ? shipping : null,
+        shipping: needsShipping
+          ? { ...shipping, country: UK_SHIPPING_COUNTRY }
+          : null,
       });
       window.location.href = result.hostedCheckoutUrl;
     } catch (cause) {
@@ -146,6 +162,9 @@ export function CheckoutPage() {
               {needsShipping ? (
                 <fieldset className="shipping-fields">
                   <legend>Shipping address</legend>
+                  <p className="muted">
+                    Only available to ship within the UK.
+                  </p>
                   <label>
                     Full name
                     <input
@@ -221,14 +240,9 @@ export function CheckoutPage() {
                     Country
                     <input
                       required
+                      readOnly
                       autoComplete="country-name"
-                      value={shipping.country}
-                      onChange={(event) =>
-                        setShipping((current) => ({
-                          ...current,
-                          country: event.target.value,
-                        }))
-                      }
+                      value={UK_SHIPPING_COUNTRY}
                     />
                   </label>
                 </fieldset>
@@ -257,15 +271,16 @@ export function CheckoutPage() {
                     </span>
                   </li>
                 ))}
+                {needsShipping ? (
+                  <li>
+                    <span>Shipping (UK)</span>
+                    <span>{formatPricePounds(shippingCents, currency)}</span>
+                  </li>
+                ) : null}
               </ul>
               <p>
                 Total{" "}
-                <strong>
-                  {formatPricePounds(
-                    totalCents,
-                    lines[0]?.product.currency ?? "GBP",
-                  )}
-                </strong>
+                <strong>{formatPricePounds(totalCents, currency)}</strong>
               </p>
             </aside>
           </>

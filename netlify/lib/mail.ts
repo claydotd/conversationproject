@@ -15,15 +15,19 @@ function resendCredentials(): { apiKey: string; from: string } | null {
 }
 
 function orderItemLines(order: OrderRecord): string {
-  return order.items
-    .map(
-      (item) =>
-        `${item.quantity} × ${item.name} — ${formatPricePounds(
-          item.unitPriceCents * item.quantity,
-          order.currency,
-        )}`,
-    )
-    .join("\n");
+  const lines = order.items.map(
+    (item) =>
+      `${item.quantity} × ${item.name} — ${formatPricePounds(
+        item.unitPriceCents * item.quantity,
+        order.currency,
+      )}`,
+  );
+  if (order.shippingCents > 0) {
+    lines.push(
+      `Shipping — ${formatPricePounds(order.shippingCents, order.currency)}`,
+    );
+  }
+  return lines.join("\n");
 }
 
 function shippingBlock(order: OrderRecord): string {

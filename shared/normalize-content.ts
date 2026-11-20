@@ -413,6 +413,13 @@ export function normalizeSiteContent(
         typeof raw?.site?.newsletterConsentLabel === "string"
           ? raw.site.newsletterConsentLabel
           : defaultContent.site.newsletterConsentLabel,
+      shippingCents: (() => {
+        const value = Number(raw?.site?.shippingCents);
+        if (!Number.isFinite(value) || value < 0) {
+          return defaultContent.site.shippingCents;
+        }
+        return Math.round(value);
+      })(),
       social: Array.isArray(raw?.site?.social)
         ? raw.site.social
             .map(normalizeSocialLink)

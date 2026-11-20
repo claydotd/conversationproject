@@ -21,7 +21,7 @@ const NAV_ITEMS: Array<{ id: Panel; label: string }> = [
   { id: "events", label: "Events" },
   { id: "contact", label: "Contact" },
   { id: "terms", label: "Terms" },
-  { id: "products", label: "Products" },
+  { id: "products", label: "Shop" },
 ];
 
 export function AdminApp() {
@@ -165,7 +165,9 @@ export function AdminApp() {
           </div>
         ) : null}
         {status ? <p className="banner">{status}</p> : null}
-        {panel === "products" ? <ProductsEditor /> : null}
+        {content && panel === "products" ? (
+          <ProductsEditor content={content} setContent={updateContent} />
+        ) : null}
         {content && panel === "site" ? (
           <SiteSettingsEditor content={content} setContent={updateContent} />
         ) : null}

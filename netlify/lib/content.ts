@@ -4,6 +4,7 @@ import {
   normalizeSiteContent,
   testimonialsFromPages,
 } from "../../shared/normalize-content";
+import { DEFAULT_SHIPPING_CENTS } from "../../shared/shop";
 import type {
   PageSlug,
   SiteContent,
@@ -24,6 +25,7 @@ interface SettingsRow {
   newsletter_heading: string;
   newsletter_paragraph: string;
   newsletter_consent_label: string;
+  shipping_cents: number | string | null;
   social: SocialLink[] | string;
 }
 
@@ -56,6 +58,12 @@ function parseJson<T>(value: T | string, fallback: T): T {
   }
 }
 
+function mapShippingCents(value: number | string | null | undefined): number {
+  const cents = Number(value);
+  if (!Number.isFinite(cents) || cents < 0) return DEFAULT_SHIPPING_CENTS;
+  return Math.round(cents);
+}
+
 function mapSettings(row: SettingsRow): SiteSettings {
   return {
     name: row.name,
@@ -71,6 +79,7 @@ function mapSettings(row: SettingsRow): SiteSettings {
     newsletterConsentLabel:
       row.newsletter_consent_label ||
       defaultContent.site.newsletterConsentLabel,
+    shippingCents: mapShippingCents(row.shipping_cents),
     social: parseJson<SocialLink[]>(row.social, []),
   };
 }
@@ -107,10 +116,20 @@ export async function getSiteContactEmail(): Promise<string | null> {
   return email || null;
 }
 
+/** Flat shipping charge for physical orders (Admin → Shop). */
+export async function getShippingCents(): Promise<number> {
+  const db = getDb();
+  const rows = await db.sql`
+    SELECT shipping_cents FROM site_settings WHERE id = ${"default"} LIMIT 1
+  `;
+  const row = rows[0] as { shipping_cents?: number | string } | undefined;
+  return mapShippingCents(row?.shipping_cents);
+}
+
 export async function loadContentFromDatabase(): Promise<SiteContent> {
   const db = getDb();
   const [settingsRows, pageRows, testimonialRows] = await Promise.all([
-    db.sql`SELECT name, tagline, footer_text, contact_email, contact_phone, contact_address, newsletter_heading, newsletter_paragraph, newsletter_consent_label, social FROM site_settings WHERE id = ${"default"}`,
+    db.sql`SELECT name, tagline, footer_text, contact_email, contact_phone, contact_address, newsletter_heading, newsletter_paragraph, newsletter_consent_label, shipping_cents, social FROM site_settings WHERE id = ${"default"}`,
     db.sql`SELECT slug, title, hero_heading, hero_subheading, sections, seo_title, seo_description FROM pages`,
     db.sql`SELECT id, page_slug, quote, author_name, author_role, image_url, sort_order FROM testimonials ORDER BY page_slug, sort_order, created_at`,
   ]);
@@ -166,8 +185,9 @@ export async function saveContentToDatabase(
     await client.query(
       `INSERT INTO site_settings (
         id, name, tagline, footer_text, contact_email, contact_phone, contact_address,
-        newsletter_heading, newsletter_paragraph, newsletter_consent_label, social, updated_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11, NOW())
+        newsletter_heading, newsletter_paragraph, newsletter_consent_label, shipping_cents,
+        social, updated_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, NOW())
       ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         tagline = EXCLUDED.tagline,
@@ -178,6 +198,7 @@ export async function saveContentToDatabase(
         newsletter_heading = EXCLUDED.newsletter_heading,
         newsletter_paragraph = EXCLUDED.newsletter_paragraph,
         newsletter_consent_label = EXCLUDED.newsletter_consent_label,
+        shipping_cents = EXCLUDED.shipping_cents,
         social = EXCLUDED.social,
         updated_at = NOW()`,
       [
@@ -191,6 +212,7 @@ export async function saveContentToDatabase(
         normalized.site.newsletterHeading,
         normalized.site.newsletterParagraph,
         normalized.site.newsletterConsentLabel,
+        normalized.site.shippingCents,
         JSON.stringify(normalized.site.social ?? []),
       ],
     );
