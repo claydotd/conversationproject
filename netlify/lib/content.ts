@@ -95,6 +95,18 @@ function mapPage(row: PageRow): {
   };
 }
 
+/** Contact email from Admin → Site settings (source of truth in the database). */
+export async function getSiteContactEmail(): Promise<string | null> {
+  const db = getDb();
+  const rows = await db.sql`
+    SELECT contact_email FROM site_settings WHERE id = ${"default"} LIMIT 1
+  `;
+  const email = String(
+    (rows[0] as { contact_email?: string } | undefined)?.contact_email ?? "",
+  ).trim();
+  return email || null;
+}
+
 export async function loadContentFromDatabase(): Promise<SiteContent> {
   const db = getDb();
   const [settingsRows, pageRows, testimonialRows] = await Promise.all([

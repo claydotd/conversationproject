@@ -193,6 +193,11 @@ export async function setOrderCheckoutId(
   `;
 }
 
+const ORDER_SELECT = `id, email, status, currency, total_cents,
+  shipping_name, shipping_line1, shipping_line2,
+  shipping_city, shipping_postcode, shipping_country,
+  sumup_checkout_id, sumup_checkout_reference, receipt_sent_at`;
+
 export async function findOrderByCheckoutReference(
   reference: string,
 ): Promise<OrderRecord | null> {
@@ -204,6 +209,25 @@ export async function findOrderByCheckoutReference(
            sumup_checkout_id, sumup_checkout_reference, receipt_sent_at
     FROM orders
     WHERE sumup_checkout_reference = ${reference}
+    LIMIT 1
+  `;
+  const row = rows[0] as OrderRow | undefined;
+  if (!row) return null;
+  const items = await loadItems([row.id]);
+  return attachItems(row, items);
+}
+
+export async function findOrderBySumupCheckoutId(
+  sumupCheckoutId: string,
+): Promise<OrderRecord | null> {
+  const db = getDb();
+  const rows = await db.sql`
+    SELECT id, email, status, currency, total_cents,
+           shipping_name, shipping_line1, shipping_line2,
+           shipping_city, shipping_postcode, shipping_country,
+           sumup_checkout_id, sumup_checkout_reference, receipt_sent_at
+    FROM orders
+    WHERE sumup_checkout_id = ${sumupCheckoutId}
     LIMIT 1
   `;
   const row = rows[0] as OrderRow | undefined;
@@ -248,26 +272,63 @@ export async function markOrderFailed(orderId: string): Promise<void> {
   `;
 }
 
-/** Atomically claim the right to send a receipt. Returns true if this caller won. */
-export async function claimReceiptSend(orderId: string): Promise<boolean> {
+/**
+ * Serialize receipt sending with a row lock. Sets `receipt_sent_at` only after
+ * `send` returns true. Concurrent callers wait on the lock; if the first send
+ * fails they can retry. Returns whether the receipt is recorded as sent.
+ */
+export async function sendReceiptUnderLock(
+  orderId: string,
+  send: (order: OrderRecord) => Promise<boolean>,
+): Promise<boolean> {
   const db = getDb();
-  const rows = await db.sql`
-    UPDATE orders
-    SET receipt_sent_at = NOW(), updated_at = NOW()
-    WHERE id = ${orderId} AND receipt_sent_at IS NULL
-    RETURNING id
-  `;
-  return Boolean(rows[0]);
-}
+  const client = await db.pool.connect();
+  try {
+    await client.query("BEGIN");
+    const locked = await client.query(
+      `SELECT ${ORDER_SELECT}
+       FROM orders
+       WHERE id = $1
+       FOR UPDATE`,
+      [orderId],
+    );
+    const row = locked.rows[0] as OrderRow | undefined;
+    if (!row) {
+      await client.query("ROLLBACK");
+      return false;
+    }
+    if (row.receipt_sent_at) {
+      await client.query("COMMIT");
+      return true;
+    }
 
-/** Clear the claim so a later confirm can retry after a send failure. */
-export async function clearReceiptSent(orderId: string): Promise<void> {
-  const db = getDb();
-  await db.sql`
-    UPDATE orders
-    SET receipt_sent_at = NULL, updated_at = NOW()
-    WHERE id = ${orderId}
-  `;
+    const items = await loadItems([row.id]);
+    const order = attachItems(row, items);
+
+    let sent = false;
+    try {
+      sent = await send(order);
+    } catch (error) {
+      console.error("Receipt email failed.", error);
+      sent = false;
+    }
+
+    if (sent) {
+      await client.query(
+        `UPDATE orders
+         SET receipt_sent_at = NOW(), updated_at = NOW()
+         WHERE id = $1`,
+        [orderId],
+      );
+    }
+    await client.query("COMMIT");
+    return sent;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function listPaidDigitalDownloadsForEmail(

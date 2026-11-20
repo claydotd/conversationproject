@@ -1,30 +1,34 @@
 import type { Config, Context } from "@netlify/functions";
 import type { CheckoutRequest, ShippingAddress } from "../../shared/shop";
 import { getEnv } from "../lib/env";
-import { errorJson, json } from "../lib/http";
-import { sendOrderReceiptEmail } from "../lib/mail";
 import {
-  claimReceiptSend,
-  clearReceiptSent,
+  fulfillCheckoutBySumupId,
+  fulfillOrderFromSumup,
+} from "../lib/fulfillment";
+import { errorJson, json } from "../lib/http";
+import {
   createPendingOrder,
   findOrderByCheckoutReference,
   markOrderFailed,
-  markOrderPaid,
   setOrderCheckoutId,
   type OrderRecord,
 } from "../lib/orders";
 import { getProductsByIds } from "../lib/products";
-import {
-  createHostedCheckout,
-  getCheckout,
-  isCheckoutFailed,
-  isCheckoutPaid,
-  sumupConfigured,
-} from "../lib/sumup";
+import { createHostedCheckout, sumupConfigured } from "../lib/sumup";
 
-function siteUrlFromRequest(req: Request): string {
-  const configured = getEnv("PUBLIC_SITE_URL");
-  if (configured) return configured.replace(/\/$/, "");
+function requirePublicSiteUrl(): string {
+  const configured = getEnv("PUBLIC_SITE_URL")?.trim().replace(/\/$/, "");
+  if (!configured) {
+    throw new Error(
+      "PUBLIC_SITE_URL must be set to your absolute site URL (e.g. https://example.com).",
+    );
+  }
+  return configured;
+}
+
+function siteUrlForEmails(req: Request): string {
+  const configured = getEnv("PUBLIC_SITE_URL")?.trim().replace(/\/$/, "");
+  if (configured) return configured;
   const url = new URL(req.url);
   return `${url.protocol}//${url.host}`;
 }
@@ -59,6 +63,16 @@ async function handleCreateCheckout(req: Request) {
   if (!sumupConfigured()) {
     return errorJson(
       "SumUp is not configured. Set SUMUP_API_KEY and SUMUP_MERCHANT_CODE.",
+      503,
+    );
+  }
+
+  let siteUrl: string;
+  try {
+    siteUrl = requirePublicSiteUrl();
+  } catch (error) {
+    return errorJson(
+      error instanceof Error ? error.message : "PUBLIC_SITE_URL is required.",
       503,
     );
   }
@@ -136,7 +150,6 @@ async function handleCreateCheckout(req: Request) {
     items: lineItems,
   });
 
-  const siteUrl = siteUrlFromRequest(req);
   const description = lineItems
     .map((item) => `${item.name} × ${item.quantity}`)
     .join(", ");
@@ -148,6 +161,7 @@ async function handleCreateCheckout(req: Request) {
       checkoutReference,
       description,
       redirectUrl: `${siteUrl}/shop/success?ref=${encodeURIComponent(checkoutReference)}`,
+      returnUrl: `${siteUrl}/api/checkout/webhook`,
     });
     if (!checkout.id || !checkout.hosted_checkout_url) {
       throw new Error("SumUp did not return a hosted checkout URL.");
@@ -161,35 +175,6 @@ async function handleCreateCheckout(req: Request) {
   } catch (error) {
     await markOrderFailed(order.id);
     throw error;
-  }
-}
-
-async function sendReceiptIfNeeded(
-  order: OrderRecord,
-  req: Request,
-): Promise<boolean> {
-  if (order.receiptSentAt) return true;
-
-  const claimed = await claimReceiptSend(order.id);
-  if (!claimed) {
-    // Another confirm already claimed (or finished) this receipt.
-    return true;
-  }
-
-  try {
-    const sent = await sendOrderReceiptEmail({
-      order,
-      siteUrl: siteUrlFromRequest(req),
-    });
-    if (!sent) {
-      await clearReceiptSent(order.id);
-      return false;
-    }
-    return true;
-  } catch (error) {
-    console.error("Receipt email failed.", error);
-    await clearReceiptSent(order.id);
-    return false;
   }
 }
 
@@ -222,38 +207,51 @@ async function handleConfirmCheckout(req: Request) {
     return errorJson("Order not found.", 404);
   }
 
-  if (order.status === "paid") {
-    const receiptSent = await sendReceiptIfNeeded(order, req);
-    return confirmResponse(order, receiptSent);
-  }
-
-  if (!order.sumupCheckoutId) {
+  if (!order.sumupCheckoutId && order.status === "pending") {
     return errorJson("This order does not have a SumUp checkout yet.", 409);
   }
 
-  const checkout = await getCheckout(order.sumupCheckoutId);
-  if (isCheckoutPaid(checkout)) {
-    const paid = await markOrderPaid(order.id);
-    if (!paid) {
-      return errorJson("Unable to update the order.", 500);
+  const result = await fulfillOrderFromSumup(order, siteUrlForEmails(req));
+  return confirmResponse(result.order, result.receiptSent);
+}
+
+async function handleSumupWebhook(req: Request) {
+  if (!sumupConfigured()) {
+    // Still 2xx so SumUp does not retry forever on misconfiguration noise.
+    console.error("SumUp webhook received but SumUp is not configured.");
+    return new Response(null, { status: 204 });
+  }
+
+  let payload: { event_type?: string; id?: string };
+  try {
+    payload = (await req.json()) as { event_type?: string; id?: string };
+  } catch {
+    return new Response(null, { status: 204 });
+  }
+
+  const eventType = String(payload.event_type ?? "");
+  const checkoutId = String(payload.id ?? "").trim();
+  if (eventType && eventType !== "CHECKOUT_STATUS_CHANGED") {
+    return new Response(null, { status: 204 });
+  }
+  if (!checkoutId) {
+    return new Response(null, { status: 204 });
+  }
+
+  try {
+    const siteUrl = requirePublicSiteUrl();
+    const result = await fulfillCheckoutBySumupId(checkoutId, siteUrl);
+    if (!result) {
+      // Order row may not have sumup_checkout_id yet; ask SumUp to retry.
+      console.warn("SumUp webhook: no order for checkout", checkoutId);
+      return new Response(null, { status: 500 });
     }
-
-    const receiptSent = await sendReceiptIfNeeded(paid, req);
-    return confirmResponse(paid, receiptSent);
+  } catch (error) {
+    console.error("SumUp webhook fulfillment failed.", error);
+    return new Response(null, { status: 500 });
   }
 
-  if (isCheckoutFailed(checkout)) {
-    await markOrderFailed(order.id);
-    return json({
-      orderId: order.id,
-      status: "failed" as const,
-      email: order.email,
-      hasDigitalItems: order.items.some((item) => item.kind === "digital"),
-      receiptSent: false,
-    });
-  }
-
-  return confirmResponse(order, Boolean(order.receiptSentAt));
+  return new Response(null, { status: 204 });
 }
 
 export default async (req: Request, _context: Context) => {
@@ -264,6 +262,9 @@ export default async (req: Request, _context: Context) => {
     }
     if (pathname === "/api/checkout/confirm" && req.method === "POST") {
       return await handleConfirmCheckout(req);
+    }
+    if (pathname === "/api/checkout/webhook" && req.method === "POST") {
+      return await handleSumupWebhook(req);
     }
     return errorJson("Not found", 404);
   } catch (error) {

@@ -5,6 +5,14 @@ import { Seo } from "../components/Seo";
 import { confirmCheckout } from "../lib/api";
 import { useCart } from "../lib/cart-context";
 
+/** ~45–60s of pending polls with mild backoff. */
+const MAX_PENDING_ATTEMPTS = 30;
+const MAX_RECEIPT_ATTEMPTS = 8;
+
+function pendingDelayMs(attempt: number): number {
+  return Math.min(1500 + attempt * 250, 3000);
+}
+
 export function ShopSuccessPage() {
   const [params] = useSearchParams();
   const reference = params.get("ref") ?? "";
@@ -24,31 +32,41 @@ export function ShopSuccessPage() {
     }
 
     let cancelled = false;
-    let attempts = 0;
+    let pendingAttempts = 0;
+    let receiptAttempts = 0;
     let timer: number | undefined;
 
     async function poll() {
-      attempts += 1;
       try {
         const next = await confirmCheckout(reference);
         if (cancelled) return;
         setResult(next);
+
         if (next.status === "paid") {
           if (!clearedRef.current) {
             clearedRef.current = true;
             clearRef.current();
           }
           setLoading(false);
+          if (!next.receiptSent && receiptAttempts < MAX_RECEIPT_ATTEMPTS) {
+            receiptAttempts += 1;
+            timer = window.setTimeout(() => {
+              void poll();
+            }, 2000);
+          }
           return;
         }
+
         if (next.status === "failed") {
           setLoading(false);
           return;
         }
-        if (attempts < 8) {
+
+        pendingAttempts += 1;
+        if (pendingAttempts < MAX_PENDING_ATTEMPTS) {
           timer = window.setTimeout(() => {
             void poll();
-          }, 1500);
+          }, pendingDelayMs(pendingAttempts));
           return;
         }
         setLoading(false);

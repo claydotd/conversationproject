@@ -45,6 +45,8 @@ export async function createHostedCheckout(input: {
   checkoutReference: string;
   description: string;
   redirectUrl: string;
+  /** SumUp webhook URL for CHECKOUT_STATUS_CHANGED notifications. */
+  returnUrl: string;
 }): Promise<SumUpCheckout> {
   const payToEmail = getEnv("SUMUP_PAY_TO_EMAIL");
   const body: Record<string, unknown> = {
@@ -54,6 +56,7 @@ export async function createHostedCheckout(input: {
     merchant_code: merchantCode(),
     description: input.description,
     redirect_url: input.redirectUrl,
+    return_url: input.returnUrl,
     hosted_checkout: { enabled: true },
   };
   if (payToEmail) body.pay_to_email = payToEmail;
